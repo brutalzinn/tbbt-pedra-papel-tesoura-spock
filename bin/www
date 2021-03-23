@@ -21,30 +21,41 @@ var obj = {
  tesoura: {
     name: 'tesoura',
     counter: ['papel', 'lagarto'],
+    frase:{'papel': 'Tesoura corta papel.',
+    'lagarto': 'Tesoura decapita lagarto.'}
   },
    papel :{
     name: 'papel',
     counter: ['pedra', 'spock'],
+    frase:{'pedra': 'Papel cobre pedra.',
+    'spock': 'Papel refuta Spock.'}
   },
    pedra: {
     name: 'pedra',
     counter: ['lagarto', 'tesoura'],
+    frase:{'lagarto': 'Pedra esmaga lagarto.',
+    'tesoura': 'Pedra esmaga tesoura.'}
   },
    lagarto :{
     name: 'lagarto',
     counter: ['spock', 'papel'],
+    frase:{'spock': 'Lagarto envenena Spock.',
+    'papel': 'Lagarto come papel.'}
   },
    spock : {
     name: 'spock',
     counter: ['tesoura', 'pedra'],
+    frase:{'tesoura': 'Spock esmaga tesouras',
+    'pedra': 'Spock vaporiza pedra.'}
   }
 }
   function checkWinner(usuarios,array) {    
-    
+   
     if(array[0].counter.includes(array[1].name)){
-       return usuarios[0] + ' Ganhou!'
+      
+       return usuarios[0] + ' Ganhou! ' + array[0].frase[array[1].name]
      }else if(array[1].counter.includes(array[0].name)){
-      return usuarios[1] + ' Ganhou!'
+      return usuarios[1] + ' Ganhou! ' + array[1].frase[array[0].name]
      }else{
        return 'De novo!'
      }
@@ -62,11 +73,14 @@ if(count < 2){
 count++
 console.log(count)
   socket.on('chat message', function(msg){
+    io.to(socket.id).emit('chat message','Você escolheu: ' +msg)
 if(count > 1){
-    io.emit('chat message', socket.id + ':' + msg);
+  // io.emit('chat message', socket.id + ':' + msg);
+ 
  var lastmessage = messages[messages.length - 1]
    if(lastmessage){
 if(lastmessage.user != socket.id){
+
   console.log('message: ' + msg);
 
      console.log(messages[messages.length - 1])
@@ -97,7 +111,7 @@ if(lastmessage.user != socket.id){
  * Listen on provided port, on all network interfaces.
  */
 
-http.listen(port,'127.0.0.1');
+http.listen(port);
 http.on('error', onError);
 http.on('listening', onListening);
 
