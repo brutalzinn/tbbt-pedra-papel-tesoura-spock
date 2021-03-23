@@ -56,18 +56,16 @@ var obj = {
     'pedra': 'Spock vaporiza pedra.'}
   }
 }
-function EffectSpeech(array){
-  return usuarios[0] + ' Ganhou! ' + array[0].frase[array[1].name]
-  return usuarios[1] + ' Ganhou! ' + array[1].frase[array[0].name]
-}
+const prefix = "/";
+
   function checkWinner(usuarios,array) {    
     
     if(array[0].counter.includes(array[1].name)){
        return {user:usuarios[0],frase:array[0].frase[array[1].name]}
      }else if(array[1].counter.includes(array[0].name)){
-      return {user:usuarios[1],frase:array[1].frase[array[1].name]}
+      return {user:usuarios[1],frase:array[1].frase[array[0].name]}
      }else{
-      return {user:0}
+      return false
      }
   }
 
@@ -75,13 +73,63 @@ function EffectSpeech(array){
 io.on('connection', function(socket){
  console.log('a user connected');
  console.log('start new round')
- clients.push(socket.id)
+ const roundDefault = 3
+ var round = roundDefault
+ var start = true
+ var autostart = true
+ clients.push({cliente:socket.id,pontos:0})
+ function commandExec(message){
+  if (message.startsWith(prefix)){
+    const commandBody = message.slice(prefix.length);
+    const args = commandBody.split(' ');
+    const command = args.shift().toLowerCase();
+   if (command === "round") {
+      const numArgs = args.map(x => x);
+     round = parseInt(numArgs[0])
+    }
+    if (command === "start") {
+     start = true
+     io.emit('chat message','Partida iniciada por ' + socket.id)
+    }
+    if (command === "stop") {
+      io.emit('chat message','Partida parada por ' + socket.id)
+      start = false
+     }
+
+     if (command === "ponto") {
+var pontos = 0
+      clients.map(item=>
+        {
+          if(item.cliente == socket.id){
+            pontos = item.pontos
+          }
+        })
+      io.to(socket.id).emit('chat message','Pontos: ' + pontos)
+
+      start = false
+     }
+     if (command === "auto") {
+      io.emit('chat message','Modo de rounds automáticos definidos por ' + socket.id + ' status: ' + autostart)
+      if(autostart){
+        autostart = false
+      }else{
+        autostart = true
+      }
+     
+     }
+  
+    return true
+  }else{
+    return false
+  }
+  }
+
  io.to(socket.id).emit('chat message','Seu nome é ' + socket.id)
  clients.map(client=>{
-  if(client != socket.id){
+  if(client.cliente != socket.id){
     console.log('testing...' + socket.id)
-    console.log('testing...' + client)
-    io.to(socket.id).emit('chat message','Você está jogando com ' + client)
+    console.log('testing...' + client.cliente)
+    io.to(socket.id).emit('chat message','Você está jogando com ' + client.cliente)
   }
 })
 
@@ -96,37 +144,70 @@ if(count == 2){
   console.log(count)
 
   socket.on('chat message', function(msg){
-    var regex = /msg/
-    var match = regex.exec(msg);
-console.log('####test'+ msg)
-console.log('####match' + match[1])
-    if(commands[match[1]]){
-console.log(match[1] + ' é um comando')
-      console.log(match[1]);  
-    }
+    if(commandExec(msg)){
     
-
+      console.log(socket.id + ' executou o comando ' + msg)
+            return 
+  }
+  console.log('round:'+round)
+  if(start){
     var lastmessage = messages[messages.length - 1]
     io.to(socket.id).emit('chat message','Você escolheu: ' +msg)
    if(lastmessage){
 if(lastmessage.user != socket.id){
   console.log('compare users: ' + msg);
   var winner = checkWinner([socket.id,lastmessage.user],[obj[msg], obj[lastmessage.msg]])
-     io.emit('chat message',winner.user + 'Ganhou 1 ponto! ' + ' Resultado: ' + winner.frase)
+if(winner.user){
+  io.emit('chat message', winner.user +' Ganhou o round: ' + round)
+     io.emit('chat message',winner.user + ' Ganhou 1 ponto! ' + ' Resultado: ' + winner.frase)
+}
+   clients.map(item=>
+    {
+      if(item.cliente == winner.user){
+        item.pontos += 1
+      }
+    })
+  
+     round--
+     
+     
+     if(round < 1 ){
+      console.log(clients)
+      io.emit('chat message', 'Round terminou.')
+      io.emit('chat message', 'Vencedor:')
+      clients.map(item=>
+        {
+          if(item.cliente == winner.user){
+            io.emit('chat message', 'Vencedor:'+item.cliente + ' Pontos:' + item.pontos)
+          }
+        })
+        if(autostart){
+          round = roundDefault
+          clients.map(item=>
+            {
+              item.pontos = 0
+            })
+        }else{
+          io.emit('chat message', 'Inicie a partida com o comando /start')
+        }
+
+    }
    messages = []
 }
    }
    messages.push({user:socket.id,msg})
-
+  }
   });
+
 }else if(count > 2){
   console.log(count)
   io.to(socket.id).emit('chat message','Limite de jogadores atingido. Aguarde um usuário desconectar')
 }  
+
   socket.on('disconnect', function(){
     console.log('user disconnected');
     for(var i= 0; i< clients.length;i++){
-      if(clients[i] == socket.id){
+      if(clients[i].cliente == socket.id){
         console.log('removing.. ' + clients[i])
         clients.splice(i,1)
        
@@ -135,6 +216,7 @@ if(lastmessage.user != socket.id){
 
     count--
   });
+
   
 });
 
