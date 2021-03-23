@@ -50,10 +50,10 @@ var commands = {
     description:'Show your points.',
     command:'ponto'
   },
-  help:{
-    name:'help',
-    description:' <center><h1>Regras</h1><br/><h5>tesoura corta papel<br/>papel cobre pedra<br/>pedra esmaga lagarto<br/>lagarto envenena Spock<br/>Spock esmaga tesoura<br/>tesoura decapita lagarto<br/>lagarto come o papel<br/>papel refuta Spock<br/>Spock vaporiza a pedra<br/>pedra esmaga tesoura</h5>',
-    command:'help'
+  info:{
+    name:'info',
+    description:'Show info about the game.',
+    command:'info'
   },
   clear:{
     name:'clear',
@@ -69,6 +69,11 @@ var commands = {
     name:'username',
     description:'set user username.',
     command:'username'
+  },
+  command:{
+    name:'command',
+    description:'Show all commands.',
+    command:'command'
   }
 
 }
@@ -121,9 +126,6 @@ clients.map(item=>
       return false
      }
   }
-function startRound(round){
-
-}
 function getUser(id){
   for(var i = 0;i < clients.length;i++){
     if(clients[i].id === id){
@@ -135,10 +137,20 @@ io.on('connection', function(socket){
 
  console.log('a user connected');
  console.log('start new round')
+
  var start = true
  var pause = false
  var autostart = true
  clients.push({id:socket.id,pontos:0,username:socket.id})
+ //io.emit('chat message', `The User ${getUser(socket.id).username} joined the game. Welcome!`)
+ io.to(socket.id).emit('chat message',`Welcome, ${getUser(socket.id).username}. type /command to show all commands and /info to see the rules.`)
+
+ for(var i = 0;i < clients.length;i++){
+   if(clients[i].id != socket.id){
+    io.to(clients[i].id).emit('chat message',`The User ${getUser(clients[i].id).username} joined the game. Welcome!`)
+   }
+ }
+
  function commandExec(message){
 
   if (message.startsWith(prefix)){
@@ -149,9 +161,16 @@ io.on('connection', function(socket){
 
     if (commands[command].command === 'username') {
       const numArgs = args.map(x => x);
+
+     io.emit('chat message', `The user changed their username from  ${getUser(socket.id).username} to ${numArgs[0]}`)
      getUser(socket.id).username = numArgs[0]
     }
-
+    if (commands[command].command === 'command') {
+      for(var i in commands){
+      io.to(socket.id).emit('chat message',{type:1,message:`<center><h1>/${commands[i].command} - ${commands[i].description}</h1> <br/>`})
+      }
+     }
+    
    if (commands[command].command === 'round') {
       const numArgs = args.map(x => x);
      round = parseInt(numArgs[0])
@@ -164,8 +183,9 @@ io.on('connection', function(socket){
     if (commands[command].command === 'clear') {
       io.to(socket.id).emit('config','clear')
     }
-    else if (commands[command].command === 'help') {
-      io.to(socket.id).emit('chat message',{type:1,message:commands[command].description})
+    else if (commands[command].command === 'info') {
+      var info = ' <center><h3>Digite uma opção abaixo na entrada para fazer uma jogada.</h3><h1>Regras</h1><br/><h2>tesoura corta papel<br/>papel cobre pedra<br/>pedra esmaga lagarto<br/>lagarto envenena Spock<br/>Spock esmaga tesoura<br/>tesoura decapita lagarto<br/>lagarto come o papel<br/>papel refuta Spock<br/>Spock vaporiza a pedra<br/>pedra esmaga tesoura</h2>'
+      io.to(socket.id).emit('chat message',{type:1,message:info})
     }
    else if (commands[command].command === "start") {
      start = true
@@ -212,7 +232,7 @@ var pontos = 0
     }
 }
 
-io.to(socket.id).emit('chat message','Your name is ' + getUser(socket.id).username)
+io.to(socket.id).emit('chat message',`Your name is ${getUser(socket.id).username} you can type /username <newusername> to change your name. `)
  clients.map(client=>{
   if(client.id != socket.id){
     io.to(socket.id).emit('chat message','You are playing with ' + client.username)
@@ -225,10 +245,6 @@ io.to(socket.id).emit('chat message','Your name is ' + getUser(socket.id).userna
 }
 
 count++
-
-  
-  console.log(count)
-
   socket.on('chat message', function(msg){
     if(commandExec(msg)){
       console.log(socket.id + ' executou o comando ' + msg)
@@ -239,10 +255,14 @@ count++
   if(start && !pause){
     var lastmessage = messages[messages.length - 1]
     io.to(socket.id).emit('chat message','Você escolheu: ' +msg)
+    if(!obj[msg]){
+      io.to(socket.id).emit('chat message','Essa opção não existe: ' +msg)
+return 
+    }
    if(lastmessage){
 if(lastmessage.user != socket.id){
   console.log('compare users: ' + msg);
-  if(obj[msg])
+ 
   var winner = checkWinner([socket.id,lastmessage.user],[obj[msg], obj[lastmessage.msg]])
 if(winner.user){
   io.emit('chat message', getUser(winner.user).username +' Ganhou o round: ' + round)
@@ -284,16 +304,13 @@ if(winner.user){
   io.to(socket.id).emit('chat message','Limite de jogadores atingido. Aguarde um usuário desconectar')
 } 
   });
-
- 
-
   socket.on('disconnect', function(){
     console.log('user disconnected');
     for(var i= 0; i< clients.length;i++){
       if(clients[i].id == socket.id){
         console.log('removing.. ' + clients[i].username)
+        io.emit('chat message', `The user ${clients[i].username} left the game.`)
         clients.splice(i,1)
-       
       }
     }
 
