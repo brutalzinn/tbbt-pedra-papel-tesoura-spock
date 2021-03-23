@@ -17,7 +17,7 @@ var messages = []
 var clients = []
 var roundDefault = 1
 var round = roundDefault
-var port = normalizePort(process.env.PORT || '80');
+var port = normalizePort(process.env.PORT || '8080');
 app.set('port', port);
 var commands = {
   round : {
@@ -116,6 +116,7 @@ clients.map(item=>
   {
     item.pontos = 0
   })
+  messages = []
 }
   function checkWinner(usuarios,array) {       
     if(array[0].counter.includes(array[1].name)){
@@ -134,10 +135,6 @@ function getUser(id){
   }
 }
 io.on('connection', function(socket){
-
- console.log('a user connected');
- console.log('start new round')
-
  var start = true
  var pause = false
  var autostart = true
@@ -264,9 +261,13 @@ if(lastmessage.user != socket.id){
   console.log('compare users: ' + msg);
  
   var winner = checkWinner([socket.id,lastmessage.user],[obj[msg], obj[lastmessage.msg]])
-if(winner.user){
+if(winner){
   io.emit('chat message', getUser(winner.user).username +' Ganhou o round: ' + round)
      io.emit('chat message',getUser(winner.user).username + ' Ganhou 1 ponto! ' + ' Resultado: ' + winner.frase)
+     messages = []
+}else{
+  io.emit('chat message','Deu draw!')
+  messages = []
 }
    clients.map(item=>
     {
@@ -275,7 +276,7 @@ if(winner.user){
       }
     })
      round--
-     if(round < 1 ){
+     if(round == 0){
       console.log(clients)
       io.emit('chat message', 'Round terminou.')
       io.emit('chat message', 'Vencedor:')
@@ -292,16 +293,16 @@ if(winner.user){
         }else{
           io.emit('chat message', 'Inicie a partida com o comando /start')
         }
-
+        messages = []
     }
-   messages = []
+  
 }
    }
    messages.push({user:socket.id,msg})
   }
 }else if(count > 2){
   console.log(count)
-  io.to(socket.id).emit('chat message','Limite de jogadores atingido. Aguarde um usuário desconectar')
+  io.to(socket.id).emit('chat message','Many users in the game. Wait for a free space.')
 } 
   });
   socket.on('disconnect', function(){
