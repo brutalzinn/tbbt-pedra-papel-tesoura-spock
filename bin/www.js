@@ -20,9 +20,40 @@ app.set('port', port);
 var commands = {
   round : {
     name:'round',
-    description:'Escolher em quantos rounds o jogo será executado.',
+    description:'Choose how much rounds will played.',
     command:'round'
+  },
+  start : {
+    name:'start',
+    description:'Start the game. This is manual mode to start the game.',
+    command:'start'
+  },
+  stop : {
+    name:'stop',
+    description:'Stop the game and reset all points.',
+    command:'stop'
+  },
+  auto : {
+    name:'auto',
+    description:'Set round to automatic mode. The mode will start again after end.',
+    command:'auto'
+  },
+  pause : {
+    name:'pause',
+    description:'Pause the game.',
+    command:'pause'
+  },
+  ponto : {
+    name:'ponto',
+    description:'Show your points.',
+    command:'ponto'
+  },
+  help:{
+    name:'help',
+    description:'tesoura corta papel \n papel cobre pedra \n pedra esmaga lagarto \n lagarto envenena Spock \n Spock esmaga tesoura \n tesoura decapita lagarto \n lagarto come o papel \n papel refuta Spock \n Spock vaporiza a pedra \n pedra esmaga tesoura',
+    command:'help'
   }
+
 }
 var obj = {
  tesoura: {
@@ -58,8 +89,14 @@ var obj = {
 }
 const prefix = "/";
 
-  function checkWinner(usuarios,array) {    
-    
+function resetGame(){
+round = roundDefault
+clients.map(item=>
+  {
+    item.pontos = 0
+  })
+}
+  function checkWinner(usuarios,array) {       
     if(array[0].counter.includes(array[1].name)){
        return {user:usuarios[0],frase:array[0].frase[array[1].name]}
      }else if(array[1].counter.includes(array[0].name)){
@@ -71,6 +108,7 @@ const prefix = "/";
 
 
 io.on('connection', function(socket){
+
  console.log('a user connected');
  console.log('start new round')
  const roundDefault = 3
@@ -80,24 +118,30 @@ io.on('connection', function(socket){
  var autostart = true
  clients.push({cliente:socket.id,pontos:0})
  function commandExec(message){
+
   if (message.startsWith(prefix)){
     const commandBody = message.slice(prefix.length);
     const args = commandBody.split(' ');
     const command = args.shift().toLowerCase();
-   if (command === "round") {
+   if(commands[command]){
+   if (commands[command].command === 'round') {
       const numArgs = args.map(x => x);
      round = parseInt(numArgs[0])
     }
-    if (command === "start") {
+    else if (commands[command].command === 'help') {
+    
+      io.to(socket.id).emit('chat message',commands[command].description)
+    }
+   else if (commands[command].command === "start") {
      start = true
      io.emit('chat message','Partida iniciada por ' + socket.id)
+     resetGame()
     }
-    if (command === "stop") {
+   else if (commands[command].command === "stop") {
       io.emit('chat message','Partida parada por ' + socket.id)
       start = false
      }
-
-     if (command === "ponto") {
+    else if (commands[command].command === "ponto") {
 var pontos = 0
       clients.map(item=>
         {
@@ -108,7 +152,7 @@ var pontos = 0
       io.to(socket.id).emit('chat message','Pontos: ' + pontos)
       start = false
      }
-     if (command === "auto") {
+    else if (commands[command].command === "auto") {
       io.emit('chat message','Modo de rounds automáticos definidos por ' + socket.id + ' status: ' + autostart)
       if(autostart){
         autostart = false
@@ -116,21 +160,22 @@ var pontos = 0
         autostart = true
       }
      }
-     if (command === "pausa") {
+     else if (commands[command].command === "pause") {
       io.emit('chat message','Jogo pausado por ' + socket.id + ' status: ' + autostart)
       if(autostart){
         pause = false
       }else{
         pause = true
       }
-     
+    }
+     }else{
+      io.to(socket.id).emit('chat message','Cant recognize this command.')
      }
-    return true
-  }else{
-    return false
-  }
-  }
-
+     return true
+    }else{
+      return false
+    }
+}
  io.to(socket.id).emit('chat message','Seu nome é ' + socket.id)
  clients.map(client=>{
   if(client.cliente != socket.id){
@@ -146,18 +191,18 @@ var pontos = 0
 }
 
 count++
-if(count == 2){  
+
   
   console.log(count)
 
   socket.on('chat message', function(msg){
     if(commandExec(msg)){
-    
       console.log(socket.id + ' executou o comando ' + msg)
             return 
   }
+  if(count == 2){  
   console.log('round:'+round)
-  if(start){
+  if(start && !pause){
     var lastmessage = messages[messages.length - 1]
     io.to(socket.id).emit('chat message','Você escolheu: ' +msg)
    if(lastmessage){
@@ -189,11 +234,7 @@ if(winner.user){
           }
         })
         if(autostart){
-          round = roundDefault
-          clients.map(item=>
-            {
-              item.pontos = 0
-            })
+          resetGame()
         }else{
           io.emit('chat message', 'Inicie a partida com o comando /start')
         }
@@ -204,12 +245,13 @@ if(winner.user){
    }
    messages.push({user:socket.id,msg})
   }
-  });
-
 }else if(count > 2){
   console.log(count)
   io.to(socket.id).emit('chat message','Limite de jogadores atingido. Aguarde um usuário desconectar')
-}  
+} 
+  });
+
+ 
 
   socket.on('disconnect', function(){
     console.log('user disconnected');
