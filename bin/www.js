@@ -76,6 +76,7 @@ io.on('connection', function(socket){
  const roundDefault = 3
  var round = roundDefault
  var start = true
+ var pause = false
  var autostart = true
  clients.push({cliente:socket.id,pontos:0})
  function commandExec(message){
@@ -105,7 +106,6 @@ var pontos = 0
           }
         })
       io.to(socket.id).emit('chat message','Pontos: ' + pontos)
-
       start = false
      }
      if (command === "auto") {
@@ -115,9 +115,16 @@ var pontos = 0
       }else{
         autostart = true
       }
+     }
+     if (command === "pausa") {
+      io.emit('chat message','Jogo pausado por ' + socket.id + ' status: ' + autostart)
+      if(autostart){
+        pause = false
+      }else{
+        pause = true
+      }
      
      }
-  
     return true
   }else{
     return false
