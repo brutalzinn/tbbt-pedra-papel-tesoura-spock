@@ -14,9 +14,16 @@ var count = 0
  * Get port from environment and store in Express.
  */
 var messages = []
+var clients = []
 var port = normalizePort(process.env.PORT || '8090');
 app.set('port', port);
-
+var commands = {
+  round : {
+    name:'round',
+    description:'Escolher em quantos rounds o jogo será executado.',
+    command:'round'
+  }
+}
 var obj = {
  tesoura: {
     name: 'tesoura',
@@ -49,55 +56,86 @@ var obj = {
     'pedra': 'Spock vaporiza pedra.'}
   }
 }
+function EffectSpeech(array){
+  return usuarios[0] + ' Ganhou! ' + array[0].frase[array[1].name]
+  return usuarios[1] + ' Ganhou! ' + array[1].frase[array[0].name]
+}
   function checkWinner(usuarios,array) {    
-   
+    
     if(array[0].counter.includes(array[1].name)){
-      
-       return usuarios[0] + ' Ganhou! ' + array[0].frase[array[1].name]
+       return {user:usuarios[0],frase:array[0].frase[array[1].name]}
      }else if(array[1].counter.includes(array[0].name)){
-      return usuarios[1] + ' Ganhou! ' + array[1].frase[array[0].name]
+      return {user:usuarios[1],frase:array[1].frase[array[1].name]}
      }else{
-       return 'De novo!'
+      return {user:0}
      }
   }
 
 
 io.on('connection', function(socket){
-  console.log('a user connected');
+ console.log('a user connected');
  console.log('start new round')
-if(count < 2){
-  messages = []
+ clients.push(socket.id)
+ io.to(socket.id).emit('chat message','Seu nome é ' + socket.id)
+ clients.map(client=>{
+  if(client != socket.id){
+    console.log('testing...' + socket.id)
+    console.log('testing...' + client)
+    io.to(socket.id).emit('chat message','Você está jogando com ' + client)
+  }
+})
+
+ if(count != 2){
   io.emit('chat message', 'Aguardando jogadores..');
+  messages = []
 }
 
 count++
-console.log(count)
+if(count == 2){  
+  
+  console.log(count)
+
   socket.on('chat message', function(msg){
+    var regex = /msg/
+    var match = regex.exec(msg);
+console.log('####test'+ msg)
+console.log('####match' + match[1])
+    if(commands[match[1]]){
+console.log(match[1] + ' é um comando')
+      console.log(match[1]);  
+    }
+    
+
+    var lastmessage = messages[messages.length - 1]
     io.to(socket.id).emit('chat message','Você escolheu: ' +msg)
-if(count > 1){
-  // io.emit('chat message', socket.id + ':' + msg);
- 
- var lastmessage = messages[messages.length - 1]
    if(lastmessage){
 if(lastmessage.user != socket.id){
-
-  console.log('message: ' + msg);
-
-     console.log(messages[messages.length - 1])
-     io.emit('chat message',checkWinner([socket.id,lastmessage.user],[obj[msg], obj[lastmessage.msg]]))
+  console.log('compare users: ' + msg);
+  var winner = checkWinner([socket.id,lastmessage.user],[obj[msg], obj[lastmessage.msg]])
+     io.emit('chat message',winner.user + 'Ganhou 1 ponto! ' + ' Resultado: ' + winner.frase)
    messages = []
 }
    }
    messages.push({user:socket.id,msg})
-  }else{
-    messages = []
-    io.emit('chat message', 'Aguardando jogadores..');
-  }
+
   });
+}else if(count > 2){
+  console.log(count)
+  io.to(socket.id).emit('chat message','Limite de jogadores atingido. Aguarde um usuário desconectar')
+}  
   socket.on('disconnect', function(){
     console.log('user disconnected');
+    for(var i= 0; i< clients.length;i++){
+      if(clients[i] == socket.id){
+        console.log('removing.. ' + clients[i])
+        clients.splice(i,1)
+       
+      }
+    }
+
     count--
   });
+  
 });
 
 
