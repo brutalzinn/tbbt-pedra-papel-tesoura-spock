@@ -85,7 +85,7 @@ if(lastmessage.user != socket.id){
 
      console.log(messages[messages.length - 1])
      io.emit('chat message',checkWinner([socket.id,lastmessage.user],[obj[msg], obj[lastmessage.msg]]))
-   //  messages = []
+   messages = []
 }
    }
    messages.push({user:socket.id,msg})
