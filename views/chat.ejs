@@ -24,23 +24,47 @@
     </form>
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        var autoscroll = true
        function pageScroll() {
-    window.scrollBy(0,1);
-    scrolldelay = setTimeout(pageScroll,10);
+        $('html,body').animate({scrollTop: document.body.scrollHeight},"fast");
 }
             var socket = io();
         $(function () {
-      
+    
           $('form').submit(function(){
             socket.emit('chat message', $('#m').val());
             $('#m').val('');
             return false;
           });
         });
-        
+        socket.on('config', function(msg){
+if(msg === 'clear'){
+  $('#messages').empty()
+}
+if(msg === 'scroll'){
+  console.log(autoscroll)
+  if(autoscroll){
+    $('#messages').append($('<li>').text('Scroll active'));
+
+    autoscroll = false
+  }else{
+    $('#messages').append($('<li>').text('Scroll desactivate'));
+
+    autoscroll = true
+  }
+}
+        });
         socket.on('chat message', function(msg){
-          $('#messages').append($('<li>').text(msg));
-        pageScroll()
+          if(msg && msg.type == 1){
+            $('#messages').append(msg.message);
+          }else{
+            $('#messages').append($('<li>').text(msg));
+
+          }
+          if(autoscroll){
+                pageScroll()
+          }
+    
         });
       </script>
   </body>

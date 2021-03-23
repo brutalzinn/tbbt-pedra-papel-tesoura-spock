@@ -50,8 +50,18 @@ var commands = {
   },
   help:{
     name:'help',
-    description:'tesoura corta papel \n papel cobre pedra \n pedra esmaga lagarto \n lagarto envenena Spock \n Spock esmaga tesoura \n tesoura decapita lagarto \n lagarto come o papel \n papel refuta Spock \n Spock vaporiza a pedra \n pedra esmaga tesoura',
+    description:' <center><h1>Regras</h1><br/><h5>tesoura corta papel<br/>papel cobre pedra<br/>pedra esmaga lagarto<br/>lagarto envenena Spock<br/>Spock esmaga tesoura<br/>tesoura decapita lagarto<br/>lagarto come o papel<br/>papel refuta Spock<br/>Spock vaporiza a pedra<br/>pedra esmaga tesoura</h5>',
     command:'help'
+  },
+  clear:{
+    name:'clear',
+    description:'Clear all chat',
+    command:'clear'
+  },
+  scroll:{
+    name:'scroll',
+    description:'set auto scroll to true or false.',
+    command:'scroll'
   }
 
 }
@@ -128,9 +138,16 @@ io.on('connection', function(socket){
       const numArgs = args.map(x => x);
      round = parseInt(numArgs[0])
     }
+    if (commands[command].command === 'scroll') {
+      io.to(socket.id).emit('config','scroll')
+      io.to(socket.id).emit('chat message','Setting auto scroll.')
+    }
+    if (commands[command].command === 'clear') {
+      io.to(socket.id).emit('config','clear')
+    }
     else if (commands[command].command === 'help') {
     
-      io.to(socket.id).emit('chat message',commands[command].description)
+      io.to(socket.id).emit('chat message',{type:1,message:commands[command].description})
     }
    else if (commands[command].command === "start") {
      start = true
@@ -181,12 +198,12 @@ var pontos = 0
   if(client.cliente != socket.id){
     console.log('testing...' + socket.id)
     console.log('testing...' + client.cliente)
-    io.to(socket.id).emit('chat message','Você está jogando com ' + client.cliente)
+    io.to(socket.id).emit('chat message','You are playing with ' + client.cliente)
   }
 })
 
  if(count != 2){
-  io.emit('chat message', 'Aguardando jogadores..');
+  io.emit('chat message', 'Waiting for players....');
   messages = []
 }
 
