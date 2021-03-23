@@ -1,0 +1,164 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+var app = require('../app');
+var debug = require('debug')('spock:server');
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
+var uuid = require("uuid-random")
+var count = 0
+/**
+ * Get port from environment and store in Express.
+ */
+var messages = []
+var port = normalizePort(process.env.PORT || '8090');
+app.set('port', port);
+
+var obj = {
+ tesoura: {
+    name: 'tesoura',
+    counter: ['papel', 'lagarto'],
+  },
+   papel :{
+    name: 'papel',
+    counter: ['pedra', 'spock'],
+  },
+   pedra: {
+    name: 'pedra',
+    counter: ['lagarto', 'tesoura'],
+  },
+   lagarto :{
+    name: 'lagarto',
+    counter: ['spock', 'papel'],
+  },
+   spock : {
+    name: 'spock',
+    counter: ['tesoura', 'pedra'],
+  }
+}
+  function checkWinner(usuarios,array) {    
+    
+    if(array[0].counter.includes(array[1].name)){
+       return usuarios[0] + ' Ganhou!'
+     }else if(array[1].counter.includes(array[0].name)){
+      return usuarios[1] + ' Ganhou!'
+     }else{
+       return 'De novo!'
+     }
+  }
+
+
+io.on('connection', function(socket){
+  console.log('a user connected');
+ console.log('start new round')
+if(count < 2){
+  messages = []
+  io.emit('chat message', 'Aguardando jogadores..');
+}
+
+count++
+console.log(count)
+  socket.on('chat message', function(msg){
+if(count > 1){
+    io.emit('chat message', socket.id + ':' + msg);
+ var lastmessage = messages[messages.length - 1]
+   if(lastmessage){
+if(lastmessage.user != socket.id){
+  console.log('message: ' + msg);
+
+     console.log(messages[messages.length - 1])
+     io.emit('chat message',checkWinner([socket.id,lastmessage.user],[obj[msg], obj[lastmessage.msg]]))
+   //  messages = []
+}
+   }
+   messages.push({user:socket.id,msg})
+  }else{
+    messages = []
+    io.emit('chat message', 'Aguardando jogadores..');
+  }
+  });
+  socket.on('disconnect', function(){
+    console.log('user disconnected');
+    count--
+  });
+});
+
+
+/**
+ * Create HTTP server.
+ */
+
+
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+
+http.listen(port,'127.0.0.1');
+http.on('error', onError);
+http.on('listening', onListening);
+
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+ 
+
+function normalizePort(val) {
+  var port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  var bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+  var addr = http.address();
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+  debug('Listening on ' + bind);
+}
