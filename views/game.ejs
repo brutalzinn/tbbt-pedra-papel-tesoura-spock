@@ -45,11 +45,9 @@ if(msg === 'scroll'){
   console.log(autoscroll)
   if(autoscroll){
     $('#messages').append($('<li>').text('Scroll active'));
-
     autoscroll = false
   }else{
     $('#messages').append($('<li>').text('Scroll desactivate'));
-
     autoscroll = true
   }
 }

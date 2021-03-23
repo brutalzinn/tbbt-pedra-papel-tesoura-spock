@@ -15,7 +15,9 @@ var count = 0
  */
 var messages = []
 var clients = []
-var port = normalizePort(process.env.PORT || '8090');
+var roundDefault = 1
+var round = roundDefault
+var port = normalizePort(process.env.PORT || '80');
 app.set('port', port);
 var commands = {
   round : {
@@ -62,6 +64,11 @@ var commands = {
     name:'scroll',
     description:'set auto scroll to true or false.',
     command:'scroll'
+  },
+  username:{
+    name:'username',
+    description:'set user username.',
+    command:'username'
   }
 
 }
@@ -98,7 +105,6 @@ var obj = {
   }
 }
 const prefix = "/";
-
 function resetGame(){
 round = roundDefault
 clients.map(item=>
@@ -115,18 +121,24 @@ clients.map(item=>
       return false
      }
   }
+function startRound(round){
 
-
+}
+function getUser(id){
+  for(var i = 0;i < clients.length;i++){
+    if(clients[i].id === id){
+      return clients[i]
+    }
+  }
+}
 io.on('connection', function(socket){
 
  console.log('a user connected');
  console.log('start new round')
- const roundDefault = 3
- var round = roundDefault
  var start = true
  var pause = false
  var autostart = true
- clients.push({cliente:socket.id,pontos:0})
+ clients.push({id:socket.id,pontos:0,username:socket.id})
  function commandExec(message){
 
   if (message.startsWith(prefix)){
@@ -134,9 +146,16 @@ io.on('connection', function(socket){
     const args = commandBody.split(' ');
     const command = args.shift().toLowerCase();
    if(commands[command]){
+
+    if (commands[command].command === 'username') {
+      const numArgs = args.map(x => x);
+     getUser(socket.id).username = numArgs[0]
+    }
+
    if (commands[command].command === 'round') {
       const numArgs = args.map(x => x);
      round = parseInt(numArgs[0])
+     io.emit('chat message', `Essa partida será definida em ${round} rounds`)
     }
     if (commands[command].command === 'scroll') {
       io.to(socket.id).emit('config','scroll')
@@ -146,7 +165,6 @@ io.on('connection', function(socket){
       io.to(socket.id).emit('config','clear')
     }
     else if (commands[command].command === 'help') {
-    
       io.to(socket.id).emit('chat message',{type:1,message:commands[command].description})
     }
    else if (commands[command].command === "start") {
@@ -162,7 +180,7 @@ io.on('connection', function(socket){
 var pontos = 0
       clients.map(item=>
         {
-          if(item.cliente == socket.id){
+          if(item.id == socket.id){
             pontos = item.pontos
           }
         })
@@ -193,12 +211,11 @@ var pontos = 0
       return false
     }
 }
- io.to(socket.id).emit('chat message','Seu nome é ' + socket.id)
+
+io.to(socket.id).emit('chat message','Your name is ' + getUser(socket.id).username)
  clients.map(client=>{
-  if(client.cliente != socket.id){
-    console.log('testing...' + socket.id)
-    console.log('testing...' + client.cliente)
-    io.to(socket.id).emit('chat message','You are playing with ' + client.cliente)
+  if(client.id != socket.id){
+    io.to(socket.id).emit('chat message','You are playing with ' + client.username)
   }
 })
 
@@ -225,30 +242,30 @@ count++
    if(lastmessage){
 if(lastmessage.user != socket.id){
   console.log('compare users: ' + msg);
+  if(obj[msg])
   var winner = checkWinner([socket.id,lastmessage.user],[obj[msg], obj[lastmessage.msg]])
 if(winner.user){
-  io.emit('chat message', winner.user +' Ganhou o round: ' + round)
-     io.emit('chat message',winner.user + ' Ganhou 1 ponto! ' + ' Resultado: ' + winner.frase)
+  io.emit('chat message', getUser(winner.user).username +' Ganhou o round: ' + round)
+     io.emit('chat message',getUser(winner.user).username + ' Ganhou 1 ponto! ' + ' Resultado: ' + winner.frase)
 }
    clients.map(item=>
     {
-      if(item.cliente == winner.user){
+      if(item.id == winner.user){
         item.pontos += 1
       }
     })
-  
      round--
-     
-     
      if(round < 1 ){
       console.log(clients)
       io.emit('chat message', 'Round terminou.')
       io.emit('chat message', 'Vencedor:')
       clients.map(item=>
         {
-          if(item.cliente == winner.user){
-            io.emit('chat message', 'Vencedor:'+item.cliente + ' Pontos:' + item.pontos)
+          if(item.id == winner.user){
+            io.emit('chat message', `Vencedor: ${item.username} Pontos: ${item.pontos}`)
           }
+          io.emit('chat message', `Usuário:${item.username} Pontos:${item.pontos} `)
+
         })
         if(autostart){
           resetGame()
@@ -273,8 +290,8 @@ if(winner.user){
   socket.on('disconnect', function(){
     console.log('user disconnected');
     for(var i= 0; i< clients.length;i++){
-      if(clients[i].cliente == socket.id){
-        console.log('removing.. ' + clients[i])
+      if(clients[i].id == socket.id){
+        console.log('removing.. ' + clients[i].username)
         clients.splice(i,1)
        
       }
