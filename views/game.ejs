@@ -3,6 +3,8 @@
 <html>
   <head>
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 
     <title>Socket.IO chat</title>
     <style>
@@ -14,10 +16,54 @@
       #messages { list-style-type: none; margin: 0; margin-bottom: 50px; padding: 0; }
       #messages li { padding: 5px 10px; }
       #messages li:nth-child(odd) { background: #eee; }
+      .modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  padding-top: 100px; /* Location of the box */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content */
+.modal-content {
+  background-color: #fefefe;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+}
+
+/* The Close Button */
+.close {
+  color: #aaaaaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
+}
     </style>
   </head>
+  
   <body>
-    
+    <div id="myModal" class="modal">
+      <!-- Modal content -->
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <div id="winner"></div>
+      </div>
+    </div>
     <ul id="messages"></ul>
     <form action="">
       <input id="m" autocomplete="off" /><button>Send</button>
@@ -25,6 +71,24 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         var autoscroll = true
+        var modal = document.getElementById("myModal");
+var span = document.getElementsByClassName("close")[0];
+// btn.onclick = function() {
+//   modal.style.display = "block";
+// }
+span.onclick = function() {
+  $('#winner').empty()
+  modal.style.display = "none";
+  
+}
+window.onclick = function(event) {
+  if (event.target == modal) {
+    $('#winner').empty()
+    modal.style.display = "none";
+  
+  }
+}
+
        function pageScroll() {
         $('html,body').animate({scrollTop: document.body.scrollHeight},"fast");
 }
@@ -37,6 +101,13 @@
             return false;
           });
         });
+
+        socket.on('info', function(msg){
+          modal.style.display = "block";
+          $('#winner').append(msg);
+          setTimeout(function(){  modal.style.display = "none",  $('#winner').empty() }, 3500);
+
+        })
         socket.on('config', function(msg){
 if(msg === 'clear'){
   $('#messages').empty()

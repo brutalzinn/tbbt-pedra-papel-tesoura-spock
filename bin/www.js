@@ -74,6 +74,11 @@ var commands = {
     name:'command',
     description:'Show all commands.',
     command:'command'
+  },
+  board:{
+    name:'board',
+    description:'Show board of the best game of world.',
+    command:'board'
   }
 
 }
@@ -138,13 +143,15 @@ io.on('connection', function(socket){
  var start = true
  var pause = false
  var autostart = true
+ var roundCount = 0
  clients.push({id:socket.id,pontos:0,username:socket.id})
  //io.emit('chat message', `The User ${getUser(socket.id).username} joined the game. Welcome!`)
  io.to(socket.id).emit('chat message',`Welcome, ${getUser(socket.id).username}. type /command to show all commands and /info to see the rules.`)
-
+ messages = []
  for(var i = 0;i < clients.length;i++){
    if(clients[i].id != socket.id){
     io.to(clients[i].id).emit('chat message',`The User ${getUser(clients[i].id).username} joined the game. Welcome!`)
+   
    }
  }
 
@@ -162,6 +169,12 @@ io.on('connection', function(socket){
      io.emit('chat message', `The user changed their username from  ${getUser(socket.id).username} to ${numArgs[0]}`)
      getUser(socket.id).username = numArgs[0]
     }
+    if (commands[command].command === 'board') {
+      clients.map(item=>
+        {
+          io.to(socket.id).emit('chat message',`Usuário:${item.username} Pontos:${item.pontos} `)
+        })
+    }
     if (commands[command].command === 'command') {
       for(var i in commands){
       io.to(socket.id).emit('chat message',{type:1,message:`<center><h1>/${commands[i].command} - ${commands[i].description}</h1> <br/>`})
@@ -171,7 +184,7 @@ io.on('connection', function(socket){
    if (commands[command].command === 'round') {
       const numArgs = args.map(x => x);
      round = parseInt(numArgs[0])
-     io.emit('chat message', `Essa partida será definida em ${round} rounds`)
+      io.emit('chat message', `Essa partida será definida em ${round} rounds`)
     }
     if (commands[command].command === 'scroll') {
       io.to(socket.id).emit('config','scroll')
@@ -236,19 +249,18 @@ io.to(socket.id).emit('chat message',`Your name is ${getUser(socket.id).username
   }
 })
 
- if(count != 2){
+ if(clients.length != 2){
   io.emit('chat message', 'Waiting for players....');
   messages = []
 }
 
-count++
   socket.on('chat message', function(msg){
     if(commandExec(msg)){
       console.log(socket.id + ' executou o comando ' + msg)
-            return 
+  return 
   }
-  if(count == 2){  
-  console.log('round:'+round)
+  if(clients.length == 2){  
+
   if(start && !pause){
     var lastmessage = messages[messages.length - 1]
     io.to(socket.id).emit('chat message','Você escolheu: ' +msg)
@@ -258,15 +270,16 @@ return
     }
    if(lastmessage){
 if(lastmessage.user != socket.id){
-  console.log('compare users: ' + msg);
- 
   var winner = checkWinner([socket.id,lastmessage.user],[obj[msg], obj[lastmessage.msg]])
+  console.log(winner)
 if(winner){
-  io.emit('chat message', getUser(winner.user).username +' Ganhou o round: ' + round)
-     io.emit('chat message',getUser(winner.user).username + ' Ganhou 1 ponto! ' + ' Resultado: ' + winner.frase)
+  console.log('round', round)
+  //io.emit('chat message',`ROUND ${round} - ${getUser(winner.user).username} ganhou 1 ponto!`)
+     io.emit('info',`<center>ROUND ${round} - ${getUser(winner.user).username} Ganhou 1 ponto! - ${winner.frase}</center>`)
      messages = []
 }else{
-  io.emit('chat message','Deu draw!')
+  console.log('round', round)
+  io.emit('info',`<center>ROUND ${round} - Empate!</center>`)
   messages = []
 }
    clients.map(item=>
@@ -275,8 +288,8 @@ if(winner){
         item.pontos += 1
       }
     })
-     round--
-     if(round == 0){
+    
+     if(roundCount == round){
       console.log(clients)
       io.emit('chat message', 'Round terminou.')
       io.emit('chat message', 'Vencedor:')
@@ -284,24 +297,27 @@ if(winner){
         {
           if(item.id == winner.user){
             io.emit('chat message', `Vencedor: ${item.username} Pontos: ${item.pontos}`)
-          }
+          }else{
           io.emit('chat message', `Usuário:${item.username} Pontos:${item.pontos} `)
 
+          }
         })
         if(autostart){
           resetGame()
         }else{
           io.emit('chat message', 'Inicie a partida com o comando /start')
         }
-        messages = []
+      
     }
+    
+    roundCount++
   
+    
 }
    }
    messages.push({user:socket.id,msg})
   }
-}else if(count > 2){
-  console.log(count)
+}else if(clients.length > 2){
   io.to(socket.id).emit('chat message','Many users in the game. Wait for a free space.')
 } 
   });
@@ -314,8 +330,6 @@ if(winner){
         clients.splice(i,1)
       }
     }
-
-    count--
   });
 
   
