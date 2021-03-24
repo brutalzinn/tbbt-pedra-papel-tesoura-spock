@@ -29,9 +29,11 @@ function commandExec(io,message,userid){
      if (commands[command].command === 'round') {
         const numArgs = args.map(x => x);
        round = parseInt(numArgs[0])
+       gameController.round = round
        gameController.roundCount = 1
+       io.emit('chat message', `Essa partida será definida em ${gameController.round } rounds`)
+
        gameController.clientMessage = []
-        io.emit('chat message', `Essa partida será definida em ${round} rounds`)
         
       }
       if (commands[command].command === 'scroll') {
@@ -58,7 +60,7 @@ function commandExec(io,message,userid){
       }
      else if (commands[command].command === "start") {
        io.emit('chat message','Partida iniciada por ' + userid)
-       start = true
+       gameController.start = true
        gameController.resetGame()
       }
      else if (commands[command].command === "stop") {
@@ -74,22 +76,22 @@ function commandExec(io,message,userid){
             }
           })
         io.to(userid).emit('chat message','Pontos: ' + pontos)
-        start = false
+  
        }
       else if (commands[command].command === "auto") {
         io.emit('chat message','Modo de rounds automáticos definidos por ' + userid + ' status: ' + autostart)
         if(autostart){
-          autostart = false
+          gameController.autostart = false
         }else{
-          autostart = true
+          gameController.autostart = true
         }
        }
        else if (commands[command].command === "pause") {
         io.emit('chat message','Jogo pausado por ' + userid + ' status: ' + autostart)
         if(autostart){
-          pause = false
+          gameController.pause = false
         }else{
-          pause = true
+          gameController.pause = true
         }
       }
        }else{

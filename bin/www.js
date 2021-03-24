@@ -13,8 +13,6 @@ var gameObject = require('../Models/gameObject')
 var gameController = require('../Controller/gameController')
 var port = normalizePort(process.env.PORT || '80');
 app.set('port', port);
-
-
   function checkWinner(usuarios,array) {       
     if(array[0].counter.includes(array[1].name)){
        return {user:usuarios[0],frase:array[0].frase[array[1].name]}
@@ -53,9 +51,7 @@ function userWelcome(userid){
 }
 io.on('connection', function(socket){
   //game variables for each game; session
- var start = true
- var pause = false
- var autostart = true
+
  gameController.clients.push({id:socket.id,pontos:0,username:socket.id})
  userWelcome(socket.id)
  // all channels and commands are handled here
@@ -67,7 +63,7 @@ io.on('connection', function(socket){
   //check if has two users..
   if(gameController.clients.length == 2){  
 
-  if(start && !pause){
+  if(gameController.start && !gameController.pause){
     var lastmessage = gameController.clientMessage[gameController.clientMessage.length - 1]
     if(!gameObject[msg.toLowerCase()]){
     
@@ -79,14 +75,12 @@ return
 if(lastmessage.user != socket.id){
   var winner = checkWinner([socket.id,lastmessage.user],[gameObject[msg.toLowerCase()], gameObject[lastmessage.msg.toLowerCase()]])
   if(winner){
-    //io.emit('chat message',`ROUND ${round} - ${getUser(winner.user).username} ganhou 1 ponto!`)
        io.emit('info',`<center>ROUND ${gameController.roundCount} - ${getUser(winner.user).username} Ganhou 1 ponto! - ${winner.frase}</center>`)
        gameController.clientMessage = []
   }else{
     io.emit('info',`<center>ROUND ${gameController.roundCount} - Empate!</center>`)
     gameController.clientMessage = []
   }
- 
   gameController.clients.map(item=>
     {
       if(item.id == winner.user){
@@ -94,29 +88,40 @@ if(lastmessage.user != socket.id){
         console.log(getUser(winner.user).username)
       }
     })
+    console.log('pre finishing round...  ',gameController.round)
   if(gameController.roundCount >= gameController.round){
- io.emit('info', `<center>${gameController.round > 1 ? gameController.round+' rounds': gameController.round + ' round'}</center>`)
-   io.emit('info', '<center>Round finished.</center>')
-   io.emit('info', '<center><h1>Result</h1></center>')
-   gameController.clients.map(item=>
+    console.log('finishing round...  ',gameController.round)
+ io.emit('info', `<center>${gameController.round > 1 ? gameController.round+' round': gameController.round + ' rounds'}</center>`)
+  io.emit('info', '<center><h1>Result</h1></center>')
+  var max = 0
+  var winner = []
+  for(var i = 0; i < gameController.clients.length;i++) 
      {
- if(item.id == winner.user){
-         io.emit('info', {message:`<h2><center>Vencedor: ${item.username} Pontos: ${item.pontos}</center></h2>`,time:5000})
- }else{
-  io.emit('info', {message:`<h2><center>Usuário:${item.username} Pontos:${item.pontos}<br/></center></h2>`,time:5000})
- }
-     })
-     if(autostart){
+ console.log('test',gameController.clients[i].pontos)
+ if(gameController.clients[i].pontos > max){
+  winner = gameController.clients[i]
+ // io.emit('info', {message:`<h2><center>Vencedor: ${gameController.clients[i].username} Pontos: ${gameController.clients[i].pontos}</center></h2>`,time:5000})
+} }
+if(Array.isArray(winner) && winner.length == 0){
+  io.emit('info', {message:`<h2><center>Empate!</center></h2>`,time:5000})
+}else{
+  io.emit('info', {message:`<h2><center>Vencedor: ${winner.username} Pontos: ${winner.pontos}</center></h2>`,time:5000})
+}
+io.emit('info', '<center><h1>Users</h1></center>')
+     
+  console.log(winner)   
+     if(gameController.autostart){
 
       gameController.resetGame()
-      io.emit('chat message', `Round reiniciado! ${gameController.round > 1 ? gameController.round+' rounds': gameController.round + ' round'} `)
+      io.emit('chat message', `Round reiniciado! ${gameController.round > 1 ? gameController.round+' round': gameController.round + ' rounds'} `)
      }else{
        io.emit('chat message', 'Inicie a partida com o comando /start')
      }
      return 
  }
  console.log('###TEST',gameController.roundCount)
-    gameController.roundCount++  
+    gameController.roundCount++
+
 }
    }
  for(var i=0;i < gameController.clientMessage.length;i++){
@@ -127,7 +132,7 @@ console.log('user already spoke')
  }
   gameController.clientMessage.push({user:socket.id,msg})   
   }
-}else if(gameController.clients.length > 2){
+}else if(gameController.clients.length >= 2){
   io.to(socket.id).emit('chat message','Many users in the game. Wait for a free space.')
 } 
   });
