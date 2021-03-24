@@ -289,6 +289,7 @@ if(lastmessage.user != socket.id){
     {
       if(item.id == winner.user){
         item.pontos += 1
+        console.log(getUser(winner.user).username)
       }
     })
   if(roundCount >= round){
@@ -327,19 +328,19 @@ if(lastmessage.user != socket.id){
    }
 
   
-   var exist = false
+  
  for(var i=0;i < clientMessage.length;i++){
   if(clientMessage[i].user.includes(socket.id)){
-    console.log(clientMessage[i].user)
-exist = true
+    clientMessage.splice(i,1)
+console.log('user already spoke')
   }
  }
- if(!exist){
+ console.log('#####test',clientMessage)
   clientMessage.push({user:socket.id,msg})
  
-  console.log('#####test',clientMessage)
  
-}
+ 
+
   
 
    
