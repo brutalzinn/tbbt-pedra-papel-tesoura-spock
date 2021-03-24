@@ -21,6 +21,7 @@ var commands = {
   round : {
     name:'round',
     description:'Choose how much rounds will played.',
+    info: '/round < number >',
     command:'round'
   },
   start : {
@@ -50,7 +51,8 @@ var commands = {
   },
   info:{
     name:'info',
-    description:'Show info about the game.',
+    description:'Show info about the game and info for especify command.',
+    info: '/info <command>',
     command:'info'
   },
   clear:{
@@ -113,7 +115,6 @@ var obj = {
   }
 }
 const prefix = "/";
-
   function checkWinner(usuarios,array) {       
     if(array[0].counter.includes(array[1].name)){
        return {user:usuarios[0],frase:array[0].frase[array[1].name]}
@@ -134,7 +135,6 @@ io.on('connection', function(socket){
  var start = true
  var pause = false
  var autostart = true
-
  function resetGame(){
   clients.map(item=>
     {
@@ -153,9 +153,7 @@ io.on('connection', function(socket){
    
    }
  }
-
  function commandExec(message){
-
   if (message.startsWith(prefix)){
     const commandBody = message.slice(prefix.length);
     const args = commandBody.split(' ');
@@ -198,7 +196,25 @@ io.on('connection', function(socket){
     }
     else if (commands[command].command === 'info') {
       var info = ' <center><h3>Digite uma opção abaixo na entrada para fazer uma jogada.</h3><h1>Regras</h1><br/><h2>tesoura corta papel<br/>papel cobre pedra<br/>pedra esmaga lagarto<br/>lagarto envenena Spock<br/>Spock esmaga tesoura<br/>tesoura decapita lagarto<br/>lagarto come o papel<br/>papel refuta Spock<br/>Spock vaporiza a pedra<br/>pedra esmaga tesoura</h2>'
-      io.to(socket.id).emit('chat message',{type:1,message:info})
+      const numArgs = args.map(x => x);
+     console.log('count',numArgs.length)
+      if(numArgs.length >= 1){
+        var commandinfo = numArgs[0]
+        
+          if(commands[commandinfo]){
+            io.to(socket.id).emit('chat message',{message:`<h4>${commands[commandinfo].command}: ${commands[commandinfo].info ? commands[commandinfo].description + ' syntax: ' + commands[commandinfo].info : commands[commandinfo].description} </h4>`,type:1})
+          }else{
+            io.to(socket.id).emit('chat message',{type:1,message:`<h4>Cant find ${commandinfo}</h4>`})
+
+          }
+         
+          }else{
+        io.to(socket.id).emit('chat message',{type:1,message:info})
+
+          }
+      
+      
+    
     }
    else if (commands[command].command === "start") {
      io.emit('chat message','Partida iniciada por ' + socket.id)
@@ -244,7 +260,6 @@ var pontos = 0
       return false
     }
 }
-
 io.to(socket.id).emit('chat message',`Your name is ${getUser(socket.id).username} you can type /username <newusername> to change your name. `)
  clients.map(client=>{
   if(client.id != socket.id){
@@ -315,27 +330,16 @@ if(lastmessage.user != socket.id){
      }
      return 
  }
-
     roundCount++  
-    
-   
-  
-  
-      
-     
 }
-
    }
-
-  
-  
  for(var i=0;i < clientMessage.length;i++){
   if(clientMessage[i].user.includes(socket.id)){
     clientMessage.splice(i,1)
 console.log('user already spoke')
   }
  }
- console.log('#####test',clientMessage)
+
   clientMessage.push({user:socket.id,msg})
  
  
