@@ -280,8 +280,8 @@ if(lastmessage.user != socket.id){
   if(roundCount >= round){
     console.log('round is finished...' + round)
  io.emit('info', `<center>${round > 1 ? round+' rounds': round + ' round'}</center>`)
-   io.emit('info', '<center>Round terminou.</center>')
-   io.emit('info', '<center><h1>Resultado</h1></center>')
+   io.emit('info', '<center>Round finished.</center>')
+   io.emit('info', '<center><h1>Result</h1></center>')
    clients.map(item=>
      {
      
