@@ -103,12 +103,12 @@ window.onclick = function(event) {
         
       if(msg.time){
         $('#winner').append(msg.message);
-   setTimeout(function(){  modal.style.display = "none" }, msg.time);
- //  $('#winner').empty()
+  setTimeout(function(){  modal.style.display = "none",  $('#winner').empty() }, msg.time);
+
       }else{
         $('#winner').append(msg);
         console.log('nomsgtime',msg)
-     setTimeout(function(){  modal.style.display = "none" }, 3500);
+    setTimeout(function(){  modal.style.display = "none",  $('#winner').empty() }, 3500);
       }
 
         })
