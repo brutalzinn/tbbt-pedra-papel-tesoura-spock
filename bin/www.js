@@ -8,7 +8,7 @@ var app = require('../app');
 var debug = require('debug')('spock:server');
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
-
+var commandExec = require('../Controller/commandController')
 
 
 var clientMessage = []
@@ -17,104 +17,8 @@ var round = 1
 var roundCount = 1
 var port = normalizePort(process.env.PORT || '80');
 app.set('port', port);
-var commands = {
-  round : {
-    name:'round',
-    description:'Choose how much rounds will played.',
-    info: '/round < number >',
-    command:'round'
-  },
-  start : {
-    name:'start',
-    description:'Start the game. This is manual mode to start the game.',
-    command:'start'
-  },
-  stop : {
-    name:'stop',
-    description:'Stop the game and reset all points.',
-    command:'stop'
-  },
-  auto : {
-    name:'auto',
-    description:'Set round to automatic mode. The mode will start again after end.',
-    command:'auto'
-  },
-  pause : {
-    name:'pause',
-    description:'Pause the game.',
-    command:'pause'
-  },
-  ponto : {
-    name:'ponto',
-    description:'Show your points.',
-    command:'ponto'
-  },
-  info:{
-    name:'info',
-    description:'Show info about the game and info for especify command.',
-    info: '/info <command>',
-    command:'info'
-  },
-  clear:{
-    name:'clear',
-    description:'Clear all chat',
-    command:'clear'
-  },
-  scroll:{
-    name:'scroll',
-    description:'set auto scroll to true or false.',
-    command:'scroll'
-  },
-  username:{
-    name:'username',
-    description:'set user username.',
-    command:'username'
-  },
-  command:{
-    name:'command',
-    description:'Show all commands.',
-    command:'command'
-  },
-  board:{
-    name:'board',
-    description:'Show board of the best game of world.',
-    command:'board'
-  }
 
-}
-var obj = {
- tesoura: {
-    name: 'tesoura',
-    counter: ['papel', 'lagarto'],
-    frase:{'papel': 'Tesoura corta papel.',
-    'lagarto': 'Tesoura decapita lagarto.'}
-  },
-   papel :{
-    name: 'papel',
-    counter: ['pedra', 'spock'],
-    frase:{'pedra': 'Papel cobre pedra.',
-    'spock': 'Papel refuta Spock.'}
-  },
-   pedra: {
-    name: 'pedra',
-    counter: ['lagarto', 'tesoura'],
-    frase:{'lagarto': 'Pedra esmaga lagarto.',
-    'tesoura': 'Pedra esmaga tesoura.'}
-  },
-   lagarto :{
-    name: 'lagarto',
-    counter: ['spock', 'papel'],
-    frase:{'spock': 'Lagarto envenena Spock.',
-    'papel': 'Lagarto come papel.'}
-  },
-   spock : {
-    name: 'spock',
-    counter: ['tesoura', 'pedra'],
-    frase:{'tesoura': 'Spock esmaga tesouras',
-    'pedra': 'Spock vaporiza pedra.'}
-  }
-}
-const prefix = "/";
+
   function checkWinner(usuarios,array) {       
     if(array[0].counter.includes(array[1].name)){
        return {user:usuarios[0],frase:array[0].frase[array[1].name]}
@@ -135,15 +39,7 @@ io.on('connection', function(socket){
  var start = true
  var pause = false
  var autostart = true
- function resetGame(){
-  clients.map(item=>
-    {
-      item.pontos = 0
-    })
-    roundCount = 1
-    clientMessage = []
-    console.log('reseting all..',roundCount,round)
-  }
+
  clients.push({id:socket.id,pontos:0,username:socket.id})
  //io.emit('chat message', `The User ${getUser(socket.id).username} joined the game. Welcome!`)
  io.to(socket.id).emit('chat message',`Welcome, ${getUser(socket.id).username}. type /command to show all commands and /info to see the rules.`)
@@ -153,113 +49,6 @@ io.on('connection', function(socket){
    
    }
  }
- function commandExec(message){
-  if (message.startsWith(prefix)){
-    const commandBody = message.slice(prefix.length);
-    const args = commandBody.split(' ');
-    const command = args.shift().toLowerCase();
-   if(commands[command]){
-
-    if (commands[command].command === 'username') {
-      const numArgs = args.map(x => x);
-
-     io.emit('chat message', `The user changed their username from  ${getUser(socket.id).username} to ${numArgs[0]}`)
-     getUser(socket.id).username = numArgs[0]
-    }
-    if (commands[command].command === 'board') {
-      clients.map(item=>
-        {
-          io.to(socket.id).emit('chat message',`Usuário:${item.username} Pontos:${item.pontos} `)
-        })
-    }
-    if (commands[command].command === 'command') {
-      for(var i in commands){
-      io.to(socket.id).emit('chat message',{type:1,message:`<center><h1>/${commands[i].command} - ${commands[i].description}</h1> <br/>`})
-      }
-     }
-    
-   if (commands[command].command === 'round') {
-      const numArgs = args.map(x => x);
-     round = parseInt(numArgs[0])
-     roundCount = 1
-     clientMessage = []
-     console.log(clientMessage,roundCount,round)
-      io.emit('chat message', `Essa partida será definida em ${round} rounds`)
-      
-    }
-    if (commands[command].command === 'scroll') {
-      io.to(socket.id).emit('config','scroll')
-      io.to(socket.id).emit('chat message','Setting auto scroll.')
-    }
-    if (commands[command].command === 'clear') {
-      io.to(socket.id).emit('config','clear')
-    }
-    else if (commands[command].command === 'info') {
-      var info = ' <center><h3>Digite uma opção abaixo na entrada para fazer uma jogada.</h3><h1>Regras</h1><br/><h2>tesoura corta papel<br/>papel cobre pedra<br/>pedra esmaga lagarto<br/>lagarto envenena Spock<br/>Spock esmaga tesoura<br/>tesoura decapita lagarto<br/>lagarto come o papel<br/>papel refuta Spock<br/>Spock vaporiza a pedra<br/>pedra esmaga tesoura</h2>'
-      const numArgs = args.map(x => x);
-     console.log('count',numArgs.length)
-      if(numArgs.length >= 1){
-        var commandinfo = numArgs[0]
-        
-          if(commands[commandinfo]){
-            io.to(socket.id).emit('chat message',{message:`<h4>${commands[commandinfo].command}: ${commands[commandinfo].info ? commands[commandinfo].description + ' syntax: ' + commands[commandinfo].info : commands[commandinfo].description} </h4>`,type:1})
-          }else{
-            io.to(socket.id).emit('chat message',{type:1,message:`<h4>Cant find ${commandinfo}</h4>`})
-
-          }
-         
-          }else{
-        io.to(socket.id).emit('chat message',{type:1,message:info})
-
-          }
-      
-      
-    
-    }
-   else if (commands[command].command === "start") {
-     io.emit('chat message','Partida iniciada por ' + socket.id)
-     start = true
-     resetGame()
-    }
-   else if (commands[command].command === "stop") {
-      io.emit('chat message','Partida parada por ' + socket.id)
-      start = false
-     }
-    else if (commands[command].command === "ponto") {
-var pontos = 0
-      clients.map(item=>
-        {
-          if(item.id == socket.id){
-            pontos = item.pontos
-          }
-        })
-      io.to(socket.id).emit('chat message','Pontos: ' + pontos)
-      start = false
-     }
-    else if (commands[command].command === "auto") {
-      io.emit('chat message','Modo de rounds automáticos definidos por ' + socket.id + ' status: ' + autostart)
-      if(autostart){
-        autostart = false
-      }else{
-        autostart = true
-      }
-     }
-     else if (commands[command].command === "pause") {
-      io.emit('chat message','Jogo pausado por ' + socket.id + ' status: ' + autostart)
-      if(autostart){
-        pause = false
-      }else{
-        pause = true
-      }
-    }
-     }else{
-      io.to(socket.id).emit('chat message','Cant recognize this command.')
-     }
-     return true
-    }else{
-      return false
-    }
-}
 io.to(socket.id).emit('chat message',`Your name is ${getUser(socket.id).username} you can type /username <newusername> to change your name. `)
  clients.map(client=>{
   if(client.id != socket.id){
@@ -274,7 +63,7 @@ io.emit('chat message', `This game will be played for ${round > 1 ? round+' roun
 }
 
   socket.on('chat message', function(msg){
-    if(commandExec(msg)){
+    if(commandExec.commandExec(io,msg,socket.id)){
       console.log(socket.id + ' executou o comando ' + msg)
   return 
   }
@@ -287,8 +76,6 @@ io.emit('chat message', `This game will be played for ${round > 1 ? round+' roun
       io.to(socket.id).emit('chat message','Essa opção não existe: ' +msg)
 return 
     }
-
-console.log(clientMessage)
    if(lastmessage){
 if(lastmessage.user != socket.id){
   var winner = checkWinner([socket.id,lastmessage.user],[obj[msg.toLowerCase()], obj[lastmessage.msg.toLowerCase()]])
@@ -339,15 +126,7 @@ if(lastmessage.user != socket.id){
 console.log('user already spoke')
   }
  }
-
-  clientMessage.push({user:socket.id,msg})
- 
- 
- 
-
-  
-
-   
+  clientMessage.push({user:socket.id,msg})   
   }
 }else if(clients.length > 2){
   io.to(socket.id).emit('chat message','Many users in the game. Wait for a free space.')
@@ -363,8 +142,6 @@ console.log('user already spoke')
       }
     }
   });
-
-  
 });
 
 
