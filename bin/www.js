@@ -92,6 +92,7 @@ if(lastmessage.user != socket.id){
   if(gameController.roundCount >= gameController.round){
     console.log('finishing round...  ',gameController.round)
  io.emit('info', `<center>${gameController.round > 1 ? gameController.round+' round': gameController.round + ' rounds'}</center>`)
+  io.emit('info', '<center><h1>Result</h1></center>')
   var max = 0
   var winner = []
   for(var i = 0; i < gameController.clients.length;i++) 
@@ -102,14 +103,14 @@ if(lastmessage.user != socket.id){
  // io.emit('info', {message:`<h2><center>Vencedor: ${gameController.clients[i].username} Pontos: ${gameController.clients[i].pontos}</center></h2>`,time:5000})
 } }
 if(Array.isArray(winner) && winner.length == 0){
-  io.emit('info', {message:`<h2><center>Empate!</center></h2>`,time:5000})
+  io.emit('info', {message:`<h2><center>Empate!</center></h2>`,time:20000})
 }else{
-  io.emit('info', {message:`<h2><center>Vencedor: ${winner.username} Pontos: ${winner.pontos}</center></h2>`,time:5000})
+  io.emit('info', {message:`<h2><center>Vencedor: ${winner.username} Pontos: ${winner.pontos}</center></h2>`,time:20000})
 }
 io.emit('info', '<center><h4>Point board</h4></center>')
 for(var i = 0; i < gameController.clients.length;i++) 
 {
- io.emit('info', {message:`<h2><center>${gameController.clients[i].username} Pontos: ${gameController.clients[i].pontos}</center></h2>`,time:5000})
+ io.emit('info', {message:`<h2><center>${gameController.clients[i].username} Pontos: ${gameController.clients[i].pontos}</center></h2>`,time:20000})
 
 }
   console.log(winner)   
