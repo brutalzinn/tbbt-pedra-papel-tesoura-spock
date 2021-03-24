@@ -273,15 +273,30 @@ io.emit('chat message', `This game will be played for ${round > 1 ? round+' roun
 return 
     }
 
-
+console.log(clientMessage)
    if(lastmessage){
 if(lastmessage.user != socket.id){
   var winner = checkWinner([socket.id,lastmessage.user],[obj[msg.toLowerCase()], obj[lastmessage.msg.toLowerCase()]])
+  if(winner){
+    //io.emit('chat message',`ROUND ${round} - ${getUser(winner.user).username} ganhou 1 ponto!`)
+       io.emit('info',`<center>ROUND ${roundCount} - ${getUser(winner.user).username} Ganhou 1 ponto! - ${winner.frase}</center>`)
+       clientMessage = []
+  }else{
+    io.emit('info',`<center>ROUND ${roundCount} - Empate!</center>`)
+    clientMessage = []
+  }
+  clients.map(item=>
+    {
+      if(item.id == winner.user){
+        item.pontos += 1
+      }
+    })
   if(roundCount >= round){
-    console.log('round is finished...' + round)
+   
  io.emit('info', `<center>${round > 1 ? round+' rounds': round + ' round'}</center>`)
    io.emit('info', '<center>Round finished.</center>')
    io.emit('info', '<center><h1>Result</h1></center>')
+   
    clients.map(item=>
      {
      
@@ -289,51 +304,45 @@ if(lastmessage.user != socket.id){
          io.emit('info', {message:`<h2><center>Vencedor: ${item.username} Pontos: ${item.pontos}</center></h2>`,time:5000})
  }else{
   io.emit('info', {message:`<h2><center>Usuário:${item.username} Pontos:${item.pontos}<br/></center></h2>`,time:5000})
-
  }
-      
-      
-      
      })
      if(autostart){
       resetGame()
       io.emit('chat message', `Round reiniciado! ${round > 1 ? round+' rounds': round + ' round'} `)
-
-       console.log('autostarting... all configs reseted!')
      }else{
        io.emit('chat message', 'Inicie a partida com o comando /start')
      }
      return 
  }
-    if(winner){
-      //io.emit('chat message',`ROUND ${round} - ${getUser(winner.user).username} ganhou 1 ponto!`)
+
+    roundCount++  
     
-         io.emit('info',`<center>ROUND ${roundCount} - ${getUser(winner.user).username} Ganhou 1 ponto! - ${winner.frase}</center>`)
-         clientMessage = []
-         roundCount++  
-      
-    }else{
    
-      io.emit('info',`<center>ROUND ${roundCount} - Empate!</center>`)
-      clientMessage = []
-      roundCount++  
-    
-    }
-    console.log('aftercheck',round)
-    console.log('aftercheckroundcountt',roundCount)
-    clients.map(item=>
-      {
-        if(item.id == winner.user){
-          item.pontos += 1
-        }
-      })
+  
   
       
      
 }
 
    }
-   clientMessage.push({user:socket.id,msg})
+
+  
+   var exist = false
+ for(var i=0;i < clientMessage.length;i++){
+  if(clientMessage[i].user.includes(socket.id)){
+    console.log(clientMessage[i].user)
+exist = true
+  }
+ }
+ if(!exist){
+  clientMessage.push({user:socket.id,msg})
+ 
+  console.log('#####test',clientMessage)
+ 
+}
+  
+
+   
   }
 }else if(clients.length > 2){
   io.to(socket.id).emit('chat message','Many users in the game. Wait for a free space.')
