@@ -1,5 +1,6 @@
 const prefix = "/";
 var commands = require('../Models/commandObject')
+var gameController = require('../Controller/gameController')
 function commandExec(io,message,userid){
     if (message.startsWith(prefix)){
       const commandBody = message.slice(prefix.length);
@@ -14,7 +15,7 @@ function commandExec(io,message,userid){
        getUser(userid).username = numArgs[0]
       }
       if (commands[command].command === 'board') {
-        clients.map(item=>
+        gameController.clients.map(item=>
           {
             io.to(userid).emit('chat message',`Usuário:${item.username} Pontos:${item.pontos} `)
           })
@@ -28,9 +29,8 @@ function commandExec(io,message,userid){
      if (commands[command].command === 'round') {
         const numArgs = args.map(x => x);
        round = parseInt(numArgs[0])
-       roundCount = 1
-       clientMessage = []
-       console.log(clientMessage,roundCount,round)
+       gameController.roundCount = 1
+       gameController.clientMessage = []
         io.emit('chat message', `Essa partida será definida em ${round} rounds`)
         
       }
@@ -59,7 +59,7 @@ function commandExec(io,message,userid){
      else if (commands[command].command === "start") {
        io.emit('chat message','Partida iniciada por ' + userid)
        start = true
-       resetGame()
+       gameController.resetGame()
       }
      else if (commands[command].command === "stop") {
         io.emit('chat message','Partida parada por ' + userid)
@@ -67,7 +67,7 @@ function commandExec(io,message,userid){
        }
       else if (commands[command].command === "ponto") {
   var pontos = 0
-        clients.map(item=>
+        gameController.clients.map(item=>
           {
             if(item.id == userid){
               pontos = item.pontos

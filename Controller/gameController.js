@@ -1,4 +1,8 @@
 
+var clientMessage = []
+var clients = []
+var round = 1
+var roundCount = 1
 function resetGame(){
     clients.map(item=>
       {
@@ -11,5 +15,9 @@ function resetGame(){
 
 
     module.exports = {
-        resetGame
+        resetGame,
+        round,
+        roundCount,
+        clients,
+        clientMessage
     }
