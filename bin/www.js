@@ -17,7 +17,7 @@ app.set('port', port);
 io.on('connection', function(socket){
   //game variables for each game; session
 
- gameController.clients.push({id:socket.id,pontos:0,username:socket.id})
+ gameController.clients.push({id:socket.id,pontos:0,username:socket.id,channel:''})
  gameController.userWelcome(socket.id,io)
  // all channels and commands are handled here
   socket.on('chat message', function(msg){
@@ -101,10 +101,23 @@ for(var i = 0; i < gameController.clients.length;i++)
  }
   gameController.clientMessage.push({user:socket.id,msg})   
   }
-}else if(gameController.clients.length >= 2){
-  io.to(socket.id).emit('chat message','Many users in the game. Wait for a free space.')
-} 
+}
   });
+  if(gameController.clients.length > 2){
+  var count = gameController.clients.length % 2
+  console.log('parts',count)
+  if(count == 0){
+     io.to(socket.id).emit('chat message','Many users in the game. Creating a new room and waiting for users.')
+ socket.join('waiting');
+ socket.emit('chat message', 'new channel: waiting')
+
+ io.to(socket.id).emit('chat message','Many users in the game. Creating a new room and waiting for users.')
+
+  }
+
+}
+
+
   socket.on('disconnect', function(){
     console.log('user disconnected');
     for(var i= 0; i< gameController.clients.length;i++){

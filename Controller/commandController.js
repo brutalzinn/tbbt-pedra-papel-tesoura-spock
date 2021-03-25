@@ -25,6 +25,17 @@ function commandExec(io,message,userid){
         io.to(userid).emit('chat message',{type:1,message:`<center><h1>/${commands[i].command} - ${commands[i].description}</h1> <br/>`})
         }
        }
+       if (commands[command].command === 'channel') {
+        const numArgs = args.map(x => x);
+        console.log('test count',numArgs.length)
+        if(numArgs.length >= 1){
+        gameController.getUser(userid).channel = numArgs[0]
+          io.to(userid).emit('chat message','Change channel to..' + numArgs[0] )
+        }else{
+          io.to(userid).emit('chat message','You are on channel... ' + gameController.getUser(userid).channel)
+        }
+        
+       }
       
      if (commands[command].command === 'round') {
         const numArgs = args.map(x => x);

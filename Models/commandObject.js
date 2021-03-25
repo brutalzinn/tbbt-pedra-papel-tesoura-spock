@@ -60,6 +60,11 @@ module.exports = {
       name:'board',
       description:'Show board of the best game of world.',
       command:'board'
+    },
+    channel:{
+      name:'channel',
+      description:'Show channel info and changes the channel.',
+      info: '<br> /channel <channelname> to changes the channel <br> /channel to show info about this channel',
+      command:'channel'
     }
-  
   }
