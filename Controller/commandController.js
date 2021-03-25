@@ -11,8 +11,8 @@ function commandExec(io,message,userid){
       if (commands[command].command === 'username') {
         const numArgs = args.map(x => x);
   
-       io.emit('chat message', `The user changed their username from  ${getUser(userid).username} to ${numArgs[0]}`)
-       getUser(userid).username = numArgs[0]
+       io.emit('chat message', `The user changed their username from  ${gameController.getUser(userid).username} to ${numArgs[0]}`)
+       gameController.getUser(userid).username = numArgs[0]
       }
       if (commands[command].command === 'board') {
         gameController.clients.map(item=>
@@ -31,9 +31,11 @@ function commandExec(io,message,userid){
        round = parseInt(numArgs[0])
        gameController.round = round
        gameController.roundCount = 1
+       gameController.clientMessage = []
+       console.log('testeeeeee',gameController.clientMessage)
        io.emit('chat message', `Essa partida será definida em ${gameController.round } rounds`)
 
-       gameController.clientMessage = []
+      
         
       }
       if (commands[command].command === 'scroll') {
