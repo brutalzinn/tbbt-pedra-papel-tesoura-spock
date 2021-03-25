@@ -30,8 +30,7 @@ function commandExec(io,message,userid){
         const numArgs = args.map(x => x);
        round = parseInt(numArgs[0])
        gameController.round = round
-       gameController.roundCount = 1
-       gameController.clientMessage = []
+       gameController.resetGame()
        console.log('testeeeeee',gameController.clientMessage)
        io.emit('chat message', `Essa partida será definida em ${gameController.round } rounds`)
 

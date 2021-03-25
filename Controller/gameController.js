@@ -7,13 +7,14 @@ var start = true
 var pause = false
 var autostart = true
 function resetGame(){
-    clients.map(item=>
+  this.clientMessage = []  
+  this.clients.map(item=>
       {
         item.pontos = 0
       })
-      roundCount = 1
-      clientMessage = []
-    }
+  this.roundCount = 1
+  console.log('resetinng.. to ',roundCount)
+ }
     function checkWinner(usuarios,array) {       
       if(array[0].counter.includes(array[1].name)){
          return {user:usuarios[0],frase:array[0].frase[array[1].name]}

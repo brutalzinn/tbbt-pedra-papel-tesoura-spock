@@ -53,7 +53,8 @@ if(lastmessage.user != socket.id){
         console.log(gameController.getUser(winner.user).username)
       }
     })
-    console.log('pre finishing round...  ',gameController.round)
+    console.log('pre finishing round..',gameController.roundCount)
+
   if(gameController.roundCount >= gameController.round){
  io.emit('info', `<center>${gameController.round > 1 ? gameController.round+' round': gameController.round + ' rounds'}</center>`)
   io.emit('info', '<center><h1>Result</h1></center>')
@@ -78,8 +79,13 @@ for(var i = 0; i < gameController.clients.length;i++)
 }
      if(gameController.autostart){
       gameController.resetGame()
-      io.emit('chat message', `Round reiniciado! ${gameController.round > 1 ? gameController.round+' round': gameController.round + ' rounds'} `)
-     }else{
+      io.emit('chat message', `Round reiniciado! ${gameController.round > 1 ? gameController.round+' rounds': gameController.round + ' round'} `)
+    
+      io.emit('chat message', `Round atual:! ${gameController.roundCount > 1 ? gameController.roundCount+' rounds': gameController.roundCount + ' round'} `)
+      
+     console.log('count',gameController.roundCount)
+      
+    }else{
        io.emit('chat message', 'Inicie a partida com o comando /start')
      }
      return 
