@@ -26,11 +26,7 @@ function resetGame(){
     }
     function lastMessage(id,channel){
       console.log('lastmessage','called',this.clientMessage.length)
- if(this.clientMessage.length == 0){
-   return false
- }
       for(var i = 0; i < this.clientMessage.length;i++){
-        console.log('message',i)
         if(this.clientMessage[i].user != id && this.clientMessage[i].channel === channel){
           return this.clientMessage[i]
         }

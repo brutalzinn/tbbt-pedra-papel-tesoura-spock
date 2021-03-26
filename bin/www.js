@@ -20,12 +20,9 @@ io.on('connection', function(socket){
  gameController.userWelcome(socket.id,io)
 
 var channel = gameController.getUser(socket.id).channel
-  var count = gameController.clients.length % 2
-
+var count = gameController.clients.length % 2
   if(count == 0){
- socket.join(channel);
-
- //socket.emit('chat message', 'new channel: waiting')
+ socket.join(channel)
  io.to(channel).emit('chat message', 'you are on channel: '+channel)
   }else{
     io.to(channel).emit('chat message', 'Waiting players')
@@ -33,7 +30,7 @@ var channel = gameController.getUser(socket.id).channel
 
  // all channels and commands are handled here
   socket.on('chat message', function(msg){
-    console.log('test',gameController.lastMessage(socket.id,channel))
+
 
     if(commandExec.commandExec(io,msg,socket.id)){
      
@@ -43,6 +40,8 @@ var channel = gameController.getUser(socket.id).channel
 
   if(gameController.start && !gameController.pause){
    
+    var message = gameController.lastMessage(socket.id,channel)
+    console.log(message)
     var lastmessage = gameController.clientMessage[gameController.clientMessage.length - 1]
     if(!gameObject[msg.toLowerCase()]){
     
