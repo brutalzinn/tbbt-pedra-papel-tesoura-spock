@@ -99,7 +99,7 @@ for(var i = 0; i < gameController.clients.length;i++)
 }
 
      if(gameController.autostart){
-   gameController.resetGame()
+      gameController.resetGame(gameController.getUser(socket.id).channel)
       io.to(channel).emit('chat message', `Round reiniciado! ${gameController.getChannel(gameController.getUser(socket.id).channel).round > 1 ? gameController.getChannel(gameController.getUser(socket.id).channel).round+' rounds': gameController.getChannel(gameController.getUser(socket.id).channel).round + ' round'} `)
     
       io.to(channel).emit('chat message', `Round atual:! ${gameController.getChannel(gameController.getUser(socket.id).channel).roundCount > 1 ? gameController.getChannel(gameController.getUser(socket.id).channel).roundCount+' rounds': gameController.getChannel(gameController.getUser(socket.id).channel).roundCount + ' round'} `)

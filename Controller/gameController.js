@@ -2,20 +2,21 @@
 var clientMessage = []
 var clients = []
 var channels = []
-var round = 1
-var roundCount = 1
 var start = true
 var pause = false
 
 var autostart = true
-function resetGame(){
+function resetGame(channel){
   this.clientMessage = []  
   this.clients.map(item=>
       {
-        item.pontos = 0
+        if(item.channel == channel){
+          item.pontos = 0
+        }
       })
-  this.roundCount = 1
-  console.log('resetinng.. to ',roundCount)
+this.getChannel(channel).roundcount = 1
+ // getChannel(channel).roundcount = 1
+ // console.log('resetinng.. to ',roundCount)
  }
     function checkWinner(usuarios,array) {       
       if(array[0].counter.includes(array[1].name)){
@@ -35,7 +36,7 @@ function resetGame(){
       }
     }
     function getChannel(channel){
-      console.log('getChannel','called',this.channels.length)
+  
       for(var i = 0; i < this.channels.length;i++){
         if(this.channels[i].channel === channel){
           return this.channels[i]
@@ -82,8 +83,6 @@ function resetGame(){
         lastMessage,
         autostart,
         userWelcome,
-        round,
-        roundCount,
         clients,
         clientMessage
     }
