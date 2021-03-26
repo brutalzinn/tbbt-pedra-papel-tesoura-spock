@@ -23,18 +23,23 @@ var count = gameController.clients.length % 2
   if(count == 0){
 gameController.getUser(socket.id).channel = gameController.getUser(socket.id).channel+parseInt(gameController.clients.length - 1)
 socket.join(gameController.getUser(socket.id).channel)
+gameController.channels.push({channel:gameController.getUser(socket.id).channel,round:1,roundcount:1,pause:false,start:true,autostart:true})
+
   }else{
   gameController.getUser(socket.id).channel = gameController.getUser(socket.id).channel+gameController.clients.length
        socket.join(gameController.getUser(socket.id).channel)
+
   }
 var channel = gameController.getUser(socket.id).channel
 
 console.log('connected to channel', channel)
 io.to(channel).emit('chat message', 'only channel ' + channel+ ' receive this message')
-gameController.channels.push({channel,round:1,roundcount:1,pause:false,start:true,autostart:true})
+
+
+
  // all channels and commands are handled here
   socket.on('chat message', function(msg){
-    if(commandExec.commandExec(io,msg,socket.id)){
+    if(commandExec.commandExec(io,msg,socket)){
   return 
   }
   //check if has two users..

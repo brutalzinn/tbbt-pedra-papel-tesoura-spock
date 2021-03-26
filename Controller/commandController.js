@@ -1,7 +1,7 @@
 const prefix = "/";
 var commands = require('../Models/commandObject')
 var gameController = require('../Controller/gameController')
-function commandExec(io,message,userid){
+function commandExec(io,message,socket){
     if (message.startsWith(prefix)){
       const commandBody = message.slice(prefix.length);
       const args = commandBody.split(' ');
@@ -11,31 +11,38 @@ function commandExec(io,message,userid){
       if (commands[command].command === 'username') {
         const numArgs = args.map(x => x);
   
-       io.emit('chat message', `The user changed their username from  ${gameController.getUser(userid).username} to ${numArgs[0]}`)
-       gameController.getUser(userid).username = numArgs[0]
+       io.emit('chat message', `The user changed their username from  ${gameController.getUser(socket.id).username} to ${numArgs[0]}`)
+       gameController.getUser(socket.id).username = numArgs[0]
       }
       if (commands[command].command === 'board') {
         gameController.clients.map(item=>
           {
-            io.to(userid).emit('chat message',`Usuário:${item.username} Pontos:${item.pontos} `)
+            io.to(socket.id).emit('chat message',`Usuário:${item.username} Pontos:${item.pontos} `)
           })
       }
       if (commands[command].command === 'command') {
         for(var i in commands){
-        io.to(userid).emit('chat message',{type:1,message:`<center><h1>/${commands[i].command} - ${commands[i].description}</h1> <br/>`})
+        io.to(socket.id).emit('chat message',{type:1,message:`<center><h1>/${commands[i].command} - ${commands[i].description}</h1> <br/>`})
         }
        }
        if (commands[command].command === 'channel') {
         const numArgs = args.map(x => x);
         console.log('test count',numArgs.length)
         if(numArgs.length >= 1){
-          gameController.getChannel(gameController.getUser(userid).channel).channel = numArgs[0]
-        gameController.getUser(userid).channel = numArgs[0]
-          io.to(userid).emit('chat message','Change channel to..' + numArgs[0] )
-        }else{
-          io.to(userid).emit('chat message','You are on channel... ' + gameController.getUser(userid).channel)
+     //     gameController.getChannel(gameController.getUser(socket.id).channel).channel = numArgs[0]
+      gameController.deleteChannel(gameController.getUser(socket.id).channel)
+        gameController.getUser(socket.id).channel = numArgs[0]
+        if(!gameController.getChannel( gameController.getUser(socket.id).channel)){
+          gameController.channels.push({channel:gameController.getUser(socket.id).channel,round:1,roundcount:1,pause:false,start:true,autostart:true})
         }
-        
+          io.to(socket.id).emit('chat message','Change channel to..' + numArgs[0] )
+        }else{
+          io.to(socket.id).emit('chat message','You are on channel... ' + gameController.getUser(socket.id).channel)
+        }
+        socket.join(gameController.getUser(socket.id).channel)
+
+        console.log( 'channel',gameController.channels)
+        console.log( 'clients',gameController.clients)
        }
       
      if (commands[command].command === 'round') {
@@ -43,21 +50,22 @@ function commandExec(io,message,userid){
      
        if(numArgs.length >= 1){
         round = parseInt(numArgs[0])
-       gameController.getChannel(gameController.getUser(userid).channel).round = round
+       gameController.getChannel(gameController.getUser(socket.id).channel).round = round
       
-       gameController.resetGame(gameController.getUser(userid).channel)
+       gameController.resetGame(gameController.getUser(socket.id).channel)
       }
-       io.to(gameController.getUser(userid).channel).emit('chat message', `Essa partida será definida em ${gameController.getChannel(gameController.getUser(userid).channel).round} rounds`)
+
+       io.to(gameController.getUser(socket.id).channel).emit('chat message', `Essa partida será definida em ${gameController.getChannel(gameController.getUser(socket.id).channel).round} rounds`)
 
       
         
       }
       if (commands[command].command === 'scroll') {
-        io.to(userid).emit('config','scroll')
-        io.to(userid).emit('chat message','Setting auto scroll.')
+        io.to(socket.id).emit('config','scroll')
+        io.to(socket.id).emit('chat message','Setting auto scroll.')
       }
       if (commands[command].command === 'clear') {
-        io.to(userid).emit('config','clear')
+        io.to(socket.id).emit('config','clear')
       }
       else if (commands[command].command === 'info') {
         var info = ' <center><h3>Digite uma opção abaixo na entrada para fazer uma jogada.</h3><h1>Regras</h1><br/><h2>tesoura corta papel<br/>papel cobre pedra<br/>pedra esmaga lagarto<br/>lagarto envenena Spock<br/>Spock esmaga tesoura<br/>tesoura decapita lagarto<br/>lagarto come o papel<br/>papel refuta Spock<br/>Spock vaporiza a pedra<br/>pedra esmaga tesoura</h2>'
@@ -66,28 +74,33 @@ function commandExec(io,message,userid){
         if(numArgs.length >= 1){
           var commandinfo = numArgs[0]
             if(commands[commandinfo]){
-              io.to(userid).emit('chat message',{message:`<h4>${commands[commandinfo].command}: ${commands[commandinfo].info ? commands[commandinfo].description + ' syntax: ' + commands[commandinfo].info : commands[commandinfo].description} </h4>`,type:1})
+              io.to(socket.id).emit('chat message',{message:`<h4>${commands[commandinfo].command}: ${commands[commandinfo].info ? commands[commandinfo].description + ' syntax: ' + commands[commandinfo].info : commands[commandinfo].description} </h4>`,type:1})
             }else{
-              io.to(userid).emit('chat message',{type:1,message:`<h4>Cant find ${commandinfo}</h4>`})
+              io.to(socket.id).emit('chat message',{type:1,message:`<h4>Cant find ${commandinfo}</h4>`})
             }
             }else{
-          io.to(userid).emit('chat message',{type:1,message:info})
+          io.to(socket.id).emit('chat message',{type:1,message:info})
             }
       }
      else if (commands[command].command === "start") {
-       io.emit('chat message','Partida iniciada por ' + userid)
-       gameController.start = true
-       gameController.resetGame()
+    
+       gameController.getChannel(gameController.getUser(socket.id).channel).start = true
+       console.log('changes channel to',gameController.getUser(socket.id).channel)
+       gameController.resetGame(gameController.getUser(socket.id).channel)
+       io.to(gameController.getUser(socket.id).channel).emit('chat message','Partida iniciada por ' + socket.id)
+console.log('sendingg to channel' ,gameController.getUser(socket.id).channel )
+       console.log( 'channel',gameController.channels)
+       console.log( 'clients',gameController.clients)
       }
      else if (commands[command].command === "stop") {
-        io.emit('chat message','Partida parada por ' + userid)
-        start = false
+      gameController.getChannel(gameController.getUser(socket.id).channel).start = false
+      io.to(gameController.getUser(socket.id).channel).emit('chat message','Partida parada por ' + socket.id)
        }
       else if (commands[command].command === "ponto") {
   var pontos = 0
         gameController.clients.map(item=>
           {
-            if(item.id == userid){
+            if(item.id == socket.id){
               pontos = item.pontos
             }
           })
@@ -95,7 +108,7 @@ function commandExec(io,message,userid){
   
        }
       else if (commands[command].command === "auto") {
-        io.emit('chat message','Modo de rounds automáticos definidos por ' + userid + ' status: ' + autostart)
+        io.emit('chat message','Modo de rounds automáticos definidos por ' + socket.id + ' status: ' + autostart)
         if(autostart){
           gameController.autostart = false
         }else{
@@ -103,7 +116,7 @@ function commandExec(io,message,userid){
         }
        }
        else if (commands[command].command === "pause") {
-        io.emit('chat message','Jogo pausado por ' + userid + ' status: ' + autostart)
+        io.emit('chat message','Jogo pausado por ' + socket.id + ' status: ' + autostart)
         if(autostart){
           gameController.pause = false
         }else{
@@ -111,7 +124,7 @@ function commandExec(io,message,userid){
         }
       }
        }else{
-        io.to(userid).emit('chat message','Cant recognize this command.')
+        io.to(socket.id).emit('chat message','Cant recognize this command.')
        }
        return true
       }else{

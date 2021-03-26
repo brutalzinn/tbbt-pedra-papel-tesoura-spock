@@ -16,7 +16,8 @@ function resetGame(channel){
       })
 this.getChannel(channel).roundcount = 1
  // getChannel(channel).roundcount = 1
- // console.log('resetinng.. to ',roundCount)
+ //console.log('channels',channels)
+ console.log('resetinng.. to ',channel)
  }
     function checkWinner(usuarios,array) {       
       if(array[0].counter.includes(array[1].name)){
@@ -32,6 +33,14 @@ this.getChannel(channel).roundcount = 1
       for(var i = 0; i < this.clientMessage.length;i++){
         if(this.clientMessage[i].user != id && this.clientMessage[i].channel === channel){
           return this.clientMessage[i]
+        }
+      }
+    }
+    function deleteChannel(channel){
+  
+      for(var i = 0; i < this.channels.length;i++){
+        if(this.channels[i].channel === channel){
+          this.channels.splice(i,1) 
         }
       }
     }
@@ -80,6 +89,7 @@ this.getChannel(channel).roundcount = 1
         channels,
         getUser,
         pause,
+        deleteChannel,
         lastMessage,
         autostart,
         userWelcome,
