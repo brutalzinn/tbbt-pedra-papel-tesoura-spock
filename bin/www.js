@@ -22,14 +22,8 @@ io.on('connection', function(socket){
 
 var count = gameController.clients.length % 2
   if(count == 0){
-
 gameController.getUser(socket.id).channel = gameController.getUser(socket.id).channel+parseInt(gameController.clients.length - 1)
-
-//  gameController.getUser(socket.id).channel = channelname
 socket.join(gameController.getUser(socket.id).channel)
-//  console.log('pair', socket.id,channelname)
-//  io.to(gameController.getUser(socket.id).channe).emit('chat message', 'you are on channel: '+channelname)
-
   }else{
   gameController.getUser(socket.id).channel = gameController.getUser(socket.id).channel+gameController.clients.length
        socket.join(gameController.getUser(socket.id).channel)
@@ -70,7 +64,7 @@ if(lastmessage.user != socket.id){
   }
   gameController.clients.map(item=>
     {
-      if(item.id == winner.user){
+      if(item.id == winner.user && item.channel == channel){
         item.pontos += 1
         console.log(gameController.getUser(winner.user).username)
       }
@@ -84,7 +78,7 @@ if(lastmessage.user != socket.id){
   var winner = []
   for(var i = 0; i < gameController.clients.length;i++) 
      {
- if(gameController.clients[i].pontos > max){
+ if(gameController.clients[i].pontos > max && gameController.clients[i].channel == channel){
   winner = gameController.clients[i]
   // io.to(channel).io.emit('info', {message:`<h2><center>Vencedor: ${gameController.clients[i].username} Pontos: ${gameController.clients[i].pontos}</center></h2>`,time:5000})
 } 
@@ -97,7 +91,10 @@ if(Array.isArray(winner) && winner.length == 0){
 io.to(channel).emit('info', '<center><h4>Point board</h4></center>')
 for(var i = 0; i < gameController.clients.length;i++) 
 {
- io.to(channel).emit('info', {message:`<h2><center>${gameController.clients[i].username} Pontos: ${gameController.clients[i].pontos}</center></h2>`,time:20000})
+  if(gameController.clients[i].channel == channel){
+    io.to(channel).emit('info', {message:`<h2><center>${gameController.clients[i].username} Pontos: ${gameController.clients[i].pontos}</center></h2>`,time:20000})
+
+  }
 }
 
      if(gameController.autostart){
