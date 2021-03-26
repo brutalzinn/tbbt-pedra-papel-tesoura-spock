@@ -39,11 +39,18 @@ function commandExec(io,message,userid){
       
      if (commands[command].command === 'round') {
         const numArgs = args.map(x => x);
-       round = parseInt(numArgs[0])
-       gameController.round = round
+     
+       if(numArgs.length >= 1){
+
+        round = parseInt(numArgs[0])
+       gameController.getChannel(gameController.getUser(userid).channel).round = round
+
+       gameController.getChannel(gameController.getUser(userid).channel).roundcount = 1
+      
        gameController.resetGame()
+      }
        console.log('testeeeeee',gameController.clientMessage)
-       io.emit('chat message', `Essa partida será definida em ${gameController.round } rounds`)
+       io.to(gameController.getUser(userid).channel).emit('chat message', `Essa partida será definida em ${gameController.getChannel(gameController.getUser(userid).channel).round} rounds`)
 
       
         

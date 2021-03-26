@@ -1,10 +1,12 @@
 
 var clientMessage = []
 var clients = []
+var channels = []
 var round = 1
 var roundCount = 1
 var start = true
 var pause = false
+
 var autostart = true
 function resetGame(){
   this.clientMessage = []  
@@ -29,6 +31,14 @@ function resetGame(){
       for(var i = 0; i < this.clientMessage.length;i++){
         if(this.clientMessage[i].user != id && this.clientMessage[i].channel === channel){
           return this.clientMessage[i]
+        }
+      }
+    }
+    function getChannel(channel){
+      console.log('getChannel','called',this.channels.length)
+      for(var i = 0; i < this.channels.length;i++){
+        if(this.channels[i].channel === channel){
+          return this.channels[i]
         }
       }
     }
@@ -65,6 +75,8 @@ function resetGame(){
         resetGame,
         start,
         checkWinner,
+        getChannel,
+        channels,
         getUser,
         pause,
         lastMessage,
