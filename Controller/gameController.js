@@ -24,9 +24,21 @@ function resetGame(){
         return false
        }
     }
+    function lastMessage(id,channel){
+      console.log('lastmessage','called',this.clientMessage.length)
+ if(this.clientMessage.length == 0){
+   return false
+ }
+      for(var i = 0; i < this.clientMessage.length;i++){
+        console.log('message',i)
+        if(this.clientMessage[i].user != id && this.clientMessage[i].channel === channel){
+          return this.clientMessage[i]
+        }
+      }
+    }
   function getUser(id){
     for(var i = 0;i < clients.length;i++){
-      if(clients[i].id === id){
+      if(clients[i].id == id){
         return clients[i]
       }
     }
@@ -59,6 +71,7 @@ function resetGame(){
         checkWinner,
         getUser,
         pause,
+        lastMessage,
         autostart,
         userWelcome,
         round,

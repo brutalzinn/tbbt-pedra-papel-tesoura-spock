@@ -13,22 +13,36 @@ var gameObject = require('../Models/gameObject')
 var gameController = require('../Controller/gameController')
 var port = normalizePort(process.env.PORT || '80');
 app.set('port', port);
-
 io.on('connection', function(socket){
   //game variables for each game; session
 
- gameController.clients.push({id:socket.id,pontos:0,username:socket.id,channel:''})
+ gameController.clients.push({id:socket.id,pontos:0,username:socket.id,channel:'principal'})
  gameController.userWelcome(socket.id,io)
+
+var channel = gameController.getUser(socket.id).channel
+  var count = gameController.clients.length % 2
+
+  if(count == 0){
+ socket.join(channel);
+
+ //socket.emit('chat message', 'new channel: waiting')
+ io.to(channel).emit('chat message', 'you are on channel: '+channel)
+  }else{
+    io.to(channel).emit('chat message', 'Waiting players')
+  }
+
  // all channels and commands are handled here
   socket.on('chat message', function(msg){
+    console.log('test',gameController.lastMessage(socket.id,channel))
+
     if(commandExec.commandExec(io,msg,socket.id)){
-      console.log(socket.id + ' executou o comando ' + msg)
+     
   return 
   }
   //check if has two users..
-  if(gameController.clients.length == 2){  
 
   if(gameController.start && !gameController.pause){
+   
     var lastmessage = gameController.clientMessage[gameController.clientMessage.length - 1]
     if(!gameObject[msg.toLowerCase()]){
     
@@ -36,15 +50,17 @@ io.on('connection', function(socket){
 return 
     }
     io.to(socket.id).emit('chat message','Você escolheu: ' +msg)
+
    if(lastmessage){
+
 if(lastmessage.user != socket.id){
   var winner = gameController.checkWinner([socket.id,lastmessage.user],[gameObject[msg.toLowerCase()], gameObject[lastmessage.msg.toLowerCase()]])
   if(winner){
        io.emit('info',`<center>ROUND ${gameController.roundCount} - ${gameController.getUser(winner.user).username} Ganhou 1 ponto! - ${winner.frase}</center>`)
-       gameController.clientMessage = []
+     gameController.clientMessage = []
   }else{
     io.emit('info',`<center>ROUND ${gameController.roundCount} - Empate!</center>`)
-    gameController.clientMessage = []
+   gameController.clientMessage = []
   }
   gameController.clients.map(item=>
     {
@@ -53,8 +69,8 @@ if(lastmessage.user != socket.id){
         console.log(gameController.getUser(winner.user).username)
       }
     })
-    console.log('pre finishing round..',gameController.roundCount)
 
+  
   if(gameController.roundCount >= gameController.round){
  io.emit('info', `<center>${gameController.round > 1 ? gameController.round+' round': gameController.round + ' rounds'}</center>`)
   io.emit('info', '<center><h1>Result</h1></center>')
@@ -77,19 +93,21 @@ for(var i = 0; i < gameController.clients.length;i++)
 {
  io.emit('info', {message:`<h2><center>${gameController.clients[i].username} Pontos: ${gameController.clients[i].pontos}</center></h2>`,time:20000})
 }
+
      if(gameController.autostart){
-      gameController.resetGame()
+   gameController.resetGame()
       io.emit('chat message', `Round reiniciado! ${gameController.round > 1 ? gameController.round+' rounds': gameController.round + ' round'} `)
     
       io.emit('chat message', `Round atual:! ${gameController.roundCount > 1 ? gameController.roundCount+' rounds': gameController.roundCount + ' round'} `)
       
-     console.log('count',gameController.roundCount)
+   
       
     }else{
        io.emit('chat message', 'Inicie a partida com o comando /start')
      }
      return 
  }
+
     gameController.roundCount++
 
  }
@@ -99,23 +117,12 @@ for(var i = 0; i < gameController.clients.length;i++)
     gameController.clientMessage.splice(i,1)
   }
  }
-  gameController.clientMessage.push({user:socket.id,msg})   
+  gameController.clientMessage.push({user:socket.id,msg,channel})   
+console.log('posclientmessage push',gameController.clientMessage)
   }
-}
+
   });
-  if(gameController.clients.length > 2){
-  var count = gameController.clients.length % 2
-  console.log('parts',count)
-  if(count == 0){
-     io.to(socket.id).emit('chat message','Many users in the game. Creating a new room and waiting for users.')
- socket.join('waiting');
- socket.emit('chat message', 'new channel: waiting')
 
- io.to(socket.id).emit('chat message','Many users in the game. Creating a new room and waiting for users.')
-
-  }
-
-}
 
 
   socket.on('disconnect', function(){
