@@ -30,8 +30,20 @@ function commandExec(io,message,socket){
         console.log('test count',numArgs.length)
         if(numArgs.length >= 1){
      //     gameController.getChannel(gameController.getUser(socket.id).channel).channel = numArgs[0]
-      gameController.deleteChannel(gameController.getUser(socket.id).channel)
-        gameController.getUser(socket.id).channel = numArgs[0]
+   var result = false
+     gameController.clients.map(item=>
+      {
+        console.log('####TEST',item)
+        if(item.id != socket.id && item.channel == gameController.getUser(socket.id).channel){
+          result = true
+          console.log('user with channel detected... ' + gameController.getUser(socket.id).channel)
+        }
+      })
+      if(!result){
+        gameController.deleteChannel(gameController.getUser(socket.id).channel)
+      }
+     
+     gameController.getUser(socket.id).channel = numArgs[0]
         if(!gameController.getChannel( gameController.getUser(socket.id).channel)){
           gameController.channels.push({channel:gameController.getUser(socket.id).channel,round:1,roundcount:1,pause:false,start:true,autostart:true})
         }
@@ -41,8 +53,9 @@ function commandExec(io,message,socket){
         }
         socket.join(gameController.getUser(socket.id).channel)
 
-        console.log( 'channel',gameController.channels)
-        console.log( 'clients',gameController.clients)
+      console.log( 'channel',gameController.channels)
+       console.log( 'clients',gameController.clients)
+
        }
       
      if (commands[command].command === 'round') {
