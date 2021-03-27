@@ -17,7 +17,10 @@ function commandExec(io,message,socket){
       if (commands[command].command === 'board') {
         gameController.clients.map(item=>
           {
-            io.to(socket.id).emit('chat message',`Usuário:${item.username} Pontos:${item.pontos} `)
+            if(item.channel == gameController.getUser(socket.id).channel){
+              io.to(socket.id).emit('chat message',`Usuário:${item.username} Pontos:${item.pontos} `)
+
+            }
           })
       }
       if (commands[command].command === 'command') {
@@ -113,7 +116,7 @@ console.log('sendingg to channel' ,gameController.getUser(socket.id).channel )
   var pontos = 0
         gameController.clients.map(item=>
           {
-            if(item.id == socket.id){
+            if(item.id == socket.id && item.channel == gameController.getUser(socket.id).channel){
               pontos = item.pontos
             }
           })
@@ -121,19 +124,20 @@ console.log('sendingg to channel' ,gameController.getUser(socket.id).channel )
   
        }
       else if (commands[command].command === "auto") {
-        io.emit('chat message','Modo de rounds automáticos definidos por ' + socket.id + ' status: ' + autostart)
-        if(autostart){
-          gameController.autostart = false
+        io.to(gameController.getUser(socket.id).channel).emit('chat message','Modo de rounds automáticos definidos por ' + socket.id + ' status: ' + autostart)
+        if(gameController.getChannel(gameController.getUser(socket.id).channel).autostart){
+          gameController.getChannel(gameController.getUser(socket.id).channel).autostart = false
         }else{
-          gameController.autostart = true
+          gameController.getChannel(gameController.getUser(socket.id).channel).autostart = true
         }
        }
        else if (commands[command].command === "pause") {
-        io.emit('chat message','Jogo pausado por ' + socket.id + ' status: ' + autostart)
-        if(autostart){
-          gameController.pause = false
+        io.to(gameController.getUser(socket.id).channel).emit('chat message','Jogo pausado por ' + socket.id + ' status: ' + io.to(gameController.getUser(socket.id).channel).pause)
+     
+        if(gameController.getChannel(gameController.getUser(socket.id).channel).pause){
+          gameController.getChannel(gameController.getUser(socket.id).channel).pause = false
         }else{
-          gameController.pause = true
+          gameController.getChannel(gameController.getUser(socket.id).channel).pause = true
         }
       }
        }else{
