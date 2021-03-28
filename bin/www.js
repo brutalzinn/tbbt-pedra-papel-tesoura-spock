@@ -59,8 +59,8 @@ return
 
    if(lastmessage){
 
-if(lastmessage.user != socket.id){
   var winner = gameController.checkWinner([socket.id,lastmessage.user],[gameObject[msg.toLowerCase()], gameObject[lastmessage.msg.toLowerCase()]])
+ if(gameController.getChannel(gameController.getUser(socket.id).channel).roundcount != gameController.getChannel(gameController.getUser(socket.id).channel).round  ){
   if(winner){
     io.to(channel).emit('info',`<center>ROUND ${ gameController.getChannel(gameController.getUser(socket.id).channel).roundcount} - ${gameController.getUser(winner.user).username} Ganhou 1 ponto! - ${winner.frase}</center>`)
      gameController.clientMessage = []
@@ -68,6 +68,8 @@ if(lastmessage.user != socket.id){
     io.to(channel).emit('info',`<center>ROUND ${ gameController.getChannel(gameController.getUser(socket.id).channel).roundcount} - Empate!</center>`)
    gameController.clientMessage = []
   }
+  console.log(gameController.getChannel(gameController.getUser(socket.id).channel).roundcount, gameController.getChannel(gameController.getUser(socket.id).channel).round )
+}
   gameController.clients.map(item=>
     {
       if(item.id == winner.user && item.channel == channel){
@@ -77,8 +79,8 @@ if(lastmessage.user != socket.id){
     })
 
   
-  if(gameController.getChannel(gameController.getUser(socket.id).channel).roundCount >= gameController.getChannel(gameController.getUser(socket.id).channel).round){
- io.to(channel).emit('info', `<center>${gameController.getChannel(gameController.getUser(socket.id).channel).round > 1 ? gameController.getChannel(gameController.getUser(socket.id).channel).round+' round': gameController.getChannel(gameController.getUser(socket.id).channel).round + ' rounds'}</center>`)
+  if(gameController.getChannel(gameController.getUser(socket.id).channel).roundcount >= gameController.getChannel(gameController.getUser(socket.id).channel).round){
+ io.to(channel).emit('info', `<center><h4>${gameController.getChannel(gameController.getUser(socket.id).channel).round > 1 ? gameController.getChannel(gameController.getUser(socket.id).channel).round+' rounds': gameController.getChannel(gameController.getUser(socket.id).channel).round + ' round'}</h4></center>`)
   io.to(channel).emit('info', '<center><h1>Result</h1></center>')
   var max = 0
   var winner = []
@@ -106,20 +108,16 @@ for(var i = 0; i < gameController.clients.length;i++)
      if(gameController.autostart){
       gameController.resetGame(gameController.getUser(socket.id).channel)
       io.to(channel).emit('chat message', `Round reiniciado! ${gameController.getChannel(gameController.getUser(socket.id).channel).round > 1 ? gameController.getChannel(gameController.getUser(socket.id).channel).round+' rounds': gameController.getChannel(gameController.getUser(socket.id).channel).round + ' round'} `)
-    
-      io.to(channel).emit('chat message', `Round atual:! ${gameController.getChannel(gameController.getUser(socket.id).channel).roundCount > 1 ? gameController.getChannel(gameController.getUser(socket.id).channel).roundCount+' rounds': gameController.getChannel(gameController.getUser(socket.id).channel).roundCount + ' round'} `)
-      
-   
-      
+   //   io.to(channel).emit('chat message', `Round atual:! ${gameController.getChannel(gameController.getUser(socket.id).channel).roundcount > 1 ? gameController.getChannel(gameController.getUser(socket.id).channel).roundcount+' rounds': gameController.getChannel(gameController.getUser(socket.id).channel).roundcount + ' round'} `)   
     }else{
        io.to(channel).emit('chat message', 'Inicie a partida com o comando /start')
      }
      return 
  }
 
- gameController.getChannel(gameController.getUser(socket.id).channel).roundCount++
+ gameController.getChannel(gameController.getUser(socket.id).channel).roundcount++
 
- }
+ 
 }
  for(var i=0;i < gameController.clientMessage.length;i++){
   if(gameController.clientMessage[i].user.includes(socket.id)){

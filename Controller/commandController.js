@@ -70,11 +70,7 @@ function commandExec(io,message,socket){
       
        gameController.resetGame(gameController.getUser(socket.id).channel)
       }
-
-       io.to(gameController.getUser(socket.id).channel).emit('chat message', `Essa partida será definida em ${gameController.getChannel(gameController.getUser(socket.id).channel).round} rounds`)
-
-      
-        
+       io.to(gameController.getUser(socket.id).channel).emit('chat message', `Essa partida será definida em ${gameController.getChannel(gameController.getUser(socket.id).channel).round} rounds`)  
       }
       if (commands[command].command === 'scroll') {
         io.to(socket.id).emit('config','scroll')
