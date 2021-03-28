@@ -14,6 +14,18 @@ function commandExec(io,message,socket){
        io.emit('chat message', `The user changed their username from  ${gameController.getUser(socket.id).username} to ${numArgs[0]}`)
        gameController.getUser(socket.id).username = numArgs[0]
       }
+
+      if (commands[command].command === 'message') {
+        const numArgs = args.map(x => x);
+        var message = ''
+ 
+    for(var i =0 ;i < numArgs.length;i++){
+      message += numArgs[i] + ' '
+    }
+  
+        io.to(gameController.getUser(socket.id).channel).emit('chat message', `${gameController.getUser(socket.id).username}: ${message}`)
+    
+      }
       if (commands[command].command === 'board') {
         gameController.clients.map(item=>
           {
@@ -30,16 +42,14 @@ function commandExec(io,message,socket){
        }
        if (commands[command].command === 'channel') {
         const numArgs = args.map(x => x);
-        console.log('test count',numArgs.length)
+        
         if(numArgs.length >= 1){
      //     gameController.getChannel(gameController.getUser(socket.id).channel).channel = numArgs[0]
    var result = false
      gameController.clients.map(item=>
       {
-        console.log('####TEST',item)
         if(item.id != socket.id && item.channel == gameController.getUser(socket.id).channel){
           result = true
-          console.log('user with channel detected... ' + gameController.getUser(socket.id).channel)
         }
       })
       if(!result){

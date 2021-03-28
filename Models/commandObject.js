@@ -61,6 +61,11 @@ module.exports = {
       description:'Show board of the best game of world.',
       command:'board'
     },
+    message:{
+      name:'message',
+      description:'Send message to all users of actual channel.',
+      command:'message'
+    },
     channel:{
       name:'channel',
       description:'Show channel info and changes the channel.',
