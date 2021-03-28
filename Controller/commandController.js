@@ -18,13 +18,10 @@ function commandExec(io,message,socket){
       if (commands[command].command === 'message') {
         const numArgs = args.map(x => x);
         var message = ''
- 
     for(var i =0 ;i < numArgs.length;i++){
       message += numArgs[i] + ' '
     }
-  
         io.to(gameController.getUser(socket.id).channel).emit('chat message', `${gameController.getUser(socket.id).username}: ${message}`)
-    
       }
       if (commands[command].command === 'board') {
         gameController.clients.map(item=>
