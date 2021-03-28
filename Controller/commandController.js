@@ -18,10 +18,21 @@ function commandExec(io,message,socket){
       if (commands[command].command === 'message') {
         const numArgs = args.map(x => x);
         var message = ''
-    for(var i =0 ;i < numArgs.length;i++){
-      message += numArgs[i] + ' '
-    }
-        io.to(gameController.getUser(socket.id).channel).emit('chat message', `${gameController.getUser(socket.id).username}: ${message}`)
+        var start = 0
+        if(numArgs[0] == 'g'){
+          console.log('this message is for all channels.')
+           start = 1
+        }else{
+         start = 0
+        }
+        for(var i=start ;i < numArgs.length;i++){
+          message += numArgs[i] + ' '
+        }   
+  if(start == 0){
+    io.to(gameController.getUser(socket.id).channel).emit('chat message', `${gameController.getUser(socket.id).username}: ${message}`)
+  }else{
+    io.emit('chat message', `[GLOBAL]${gameController.getUser(socket.id).username}: ${message}`)
+  }
       }
       if (commands[command].command === 'board') {
         gameController.clients.map(item=>

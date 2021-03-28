@@ -63,7 +63,8 @@ module.exports = {
     },
     message:{
       name:'message',
-      description:'Send message to all users of actual channel.',
+      info:'<br>/message  g < message > to send global message <br>/message < message > to send a message to user channel.',
+      description:'Send message to all users of actual channel or a global message to all channels in the server.',
       command:'message'
     },
     channel:{
