@@ -20,7 +20,6 @@ function commandExec(io,message,socket){
         var message = ''
         var start = 0
         if(numArgs[0] == 'g'){
-          console.log('this message is for all channels.')
            start = 1
         }else{
          start = 0
